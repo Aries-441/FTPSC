@@ -1,9 +1,25 @@
 SRC=main.c ftpClient.c ../common/common.c
 CC=gcc
+DATE=$(shell date +%Y-%m-%d-%H-%M-%S)
+BUILDDIR=../../build
+LOGDIR=../../logs/$(DATE)
+OUTFILE=$(BUILDDIR)/ftpClient
+LOGFILE=$(LOGDIR)/clientbuild.log
 
-ftpClient:$(SRC)
-	$(CC) -o $@ $^
+$(OUTFILE):$(SRC) | $(BUILDDIR) $(LOGDIR)
+	$(CC) -o $@ $^ 2>&1 | tee $(LOGFILE)
+	cp $@ $(LOGDIR)/
 
-.PHONY:clean
+$(BUILDDIR) $(LOGDIR):
+	mkdir -p $@
+
+.PHONY:clean rmlogs install
 clean:
-	rm -rf ftpClient
+	rm -rf $(BUILDDIR)/*
+
+rmlogs:	
+	rm -rf ../../logs/*
+
+install: $(OUTFILE)
+	mkdir -p ../../install/
+	cp $(OUTFILE) ../../install/
