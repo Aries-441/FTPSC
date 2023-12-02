@@ -4,7 +4,7 @@ LIB=-lpthread
 DATE=$(shell date +%Y-%m-%d-%H-%M-%S)
 BUILDDIR=../../build
 LOGDIR=../../logs/$(DATE)
-OUTFILE=$(BUILDDIR)/ftpServer
+OUTFILE=$(BUILDDIR)/ServerFTP
 LOGFILE=$(LOGDIR)/serverbuild.log
 
 $(OUTFILE):$(SRC) | $(BUILDDIR) $(LOGDIR)

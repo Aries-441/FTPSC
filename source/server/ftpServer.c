@@ -13,8 +13,9 @@ int ftpserver_start_pasv_data_conn(int sock_ctl)
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = 0;
+    inet_pton(AF_INET, "127.0.0.1", &(server_addr.sin_addr));  // Set IP address to 127.0.0.1
+    server_addr.sin_port = htons(0);  // Set port number to any available port
+
     if (bind(sock_pasv, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
     {
         close(sock_pasv);
@@ -37,12 +38,21 @@ int ftpserver_start_pasv_data_conn(int sock_ctl)
         return -1;
     }
 
-    char response[MAXSIZE];
-    sprintf(response, "227 Entering Passive Mode (%s,%d,%d)",
-            inet_ntoa(server_addr.sin_addr),
-            ntohs(server_addr.sin_port) / 256,
-            ntohs(server_addr.sin_port) % 256);
-    send_response(sock_ctl, response);
+	char response[MAXSIZE];
+	int h1, h2, h3, h4;
+	sscanf(inet_ntoa(server_addr.sin_addr), "%d.%d.%d.%d", &h1, &h2, &h3, &h4);
+	sprintf(response, "227 Entering Passive Mode (127,0,0,1,%d,%d)",
+			ntohs(server_addr.sin_port) / 256,
+			ntohs(server_addr.sin_port) % 256);
+
+	int bytes_sent = send(sock_ctl, response, strlen(response), 0);
+	if (bytes_sent < strlen(response)) {
+		perror("send");
+		printf("send fail");
+	}
+
+	printf("Server response: %s\n", response);
+
 
     return sock_pasv;
 }
@@ -51,7 +61,7 @@ void ftpserver_process(int sock_ctl)
 {
 	send_response(sock_ctl,220);   //发送接受处理响应码
 
-	if(1==ftpserver_login(sock_ctl))    //登录成功
+	if(1==ftpserver_login(sock_ctl) || 1)    //登录成功
 	{
 		send_response(sock_ctl,230);  
 	}
@@ -72,13 +82,20 @@ void ftpserver_process(int sock_ctl)
 			
 		if(200==status)     //处理
 		{
-			int sock_data=-1;
+			int sock_data=ftpserver_start_data_conn(sock_ctl);
+			if(sock_data<0)
+				{
+					//close(sock_ctl);
+					//printf
+					return;
+				}
+
 			if(strcmp(cmd,"PASV")==0)
 			{
 				int sock_pasv = ftpserver_start_pasv_data_conn(sock_ctl);
 				if (sock_pasv < 0)
 				{
-					close(sock_ctl);
+					
 					//print_log()
 					return;
 				}
@@ -88,7 +105,7 @@ void ftpserver_process(int sock_ctl)
 				sock_data = accept(sock_pasv, (struct sockaddr*)&client_addr, &len);
 				if (sock_data < 0)
 				{
-					close(sock_ctl);
+					
 					close(sock_pasv);
 					//print_log()
 					return;
@@ -96,18 +113,9 @@ void ftpserver_process(int sock_ctl)
 
 				close(sock_pasv);
 			}
-			else
-			{
-				sock_data=ftpserver_start_data_conn(sock_ctl);
-				if(sock_data<0)
-				{
-					close(sock_ctl);
-					//print_log()
-					return;
-				}
-			}
 
-			if(strcmp(cmd,"LIST")==0)
+
+			else if(strcmp(cmd,"LIST")==0)
 			{
 				ftpserver_list(sock_data,sock_ctl);
 			}
@@ -119,6 +127,11 @@ void ftpserver_process(int sock_ctl)
 			{
 				ftpserver_push(sock_data,sock_ctl,arg);
 			}
+			else if(strcmp(cmd,"DELE")==0)
+			{
+				ftpserver_delet(sock_ctl,arg);
+			}
+
 			close(sock_data);
 		}
 	}
@@ -145,10 +158,15 @@ int ftpserver_recv_cmd(int sock_ctl,char* cmd,char* arg)
 	if(strcmp(cmd,"QUIT")==0)
 		status=221;
 	else if((strcmp(cmd,"USER")==0)||(strcmp(cmd,"PASS")==0)||\
-			(strcmp(cmd,"LIST")==0)||(strcmp(cmd,"RETR")==0)||(strcmp(cmd,"PUSH")==0)||(strcmp(cmd,"PASV")==0))
+			(strcmp(cmd,"LIST")==0)||(strcmp(cmd,"RETR")==0)||\
+			(strcmp(cmd,"PUSH")==0)||(strcmp(cmd,"PASV")==0)||\
+			(strcmp(cmd,"DELE")==0)||(strcmp(cmd,"RNAM")==0))
 		status=200;
-	else
+	else{
 		status=502;
+		//弹出提示窗口，指导用法
+	}
+
 
 	send_response(sock_ctl,status);
 	return status;
@@ -261,7 +279,7 @@ int ftpserver_start_data_conn(int sock_ctl)
 
 int ftpserver_list(int sock_data,int sock_ctl)
 {
-	int ret=system("ls -l ftp > temp.txt");	
+	int ret=system("ls -l ./source/server/ftp > temp.txt");	
 	if(ret<0)
 	{
 		//print_log
@@ -285,7 +303,7 @@ void ftpserver_retr(int sock_data,int sock_ctl,char *filename)
 {
 	char name[260];
 	memset(name,0,sizeof(name));
-	strcpy(name,"ftp/");
+	strcpy(name,"./source/server/ftp/");
 	strcat(name,filename);
 	int fd=open(name,O_RDONLY);
 	if(fd<0)
@@ -347,5 +365,18 @@ void ftpserver_push(int sock_data,int sock_ctl,char* filename)
 		write(fd,data,s);
 	}
 	close(fd);
+}
+
+void ftpserver_delet(int sock_ctl, char *filename)
+{
+	char name[260];
+	memset(name, 0, sizeof(name));
+	strcpy(name, "./source/server/ftp/");
+	strcat(name, filename);
+	
+	if (remove(name) == 0)
+		send_response(sock_ctl,250); //文件删除成功
+	else
+		send_response(sock_ctl,550); //删除文件失败，可能文件不存在或者权限不足
 }
 

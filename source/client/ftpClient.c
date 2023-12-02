@@ -1,4 +1,6 @@
 #include"ftpClient.h"
+#include <sys/stat.h>
+#include <sys/sendfile.h>
 
 int read_reply(int sock_ctl)       //读取服务器的回复
 {
@@ -60,8 +62,10 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 		strcpy(cmd->code,"QUIT");
 	else if((strncmp(buf,"put",3)==0) || (strncmp(buf,"push",4)==0) || (strncmp(buf,"PUSH",4)==0))
 		strcpy(cmd->code,"PUSH");
-	else if((strncmp(buf,"pasv",3)==0) || (strncmp(buf,"PASV",4)==0))
+	else if((strncmp(buf,"pasv",4)==0) || (strncmp(buf,"PASV",4)==0))
 		strcpy(cmd->code,"PASV");
+	else if((strncmp(buf,"delete",4)==0) || (strncmp(buf,"dele",4)==0))
+		strcpy(cmd->code,"DELE");
 	else
 		return -1;
 
@@ -173,11 +177,77 @@ int ftpclient_send_cmd(int sock_ctl,struct command* cmd)     //发送命令
 }
 
 
+int ftpclient_send_pasv(int sock_ctl, char* response, int response_size)
+{   
+	printf("send pasv");
+	
+	struct command cmd_instance;  // 创建一个command结构体实例
+	struct command *cmd = &cmd_instance;  
+
+	memset(cmd->code,0,sizeof(cmd->code));
+	memset(cmd->arg,0,sizeof(cmd->arg));
+
+	strcpy(cmd->code, "PASV");
+
+
+	char buf[MAXSIZE];
+
+	sprintf(buf,"%s",cmd->code);
+
+
+	if(send(sock_ctl,buf,strlen(buf),0)<0)
+    {
+        printf("pasv failed");
+        return -1;
+    }
+
+    if (recv_data(sock_ctl, response, response_size) < 0)
+    {
+        printf("pasv failed");
+        return -1;
+    }
+
+    return 0;
+}
+
+
+int ftpclient_start_pasv_data_conn(int sock_ctl, char* response)
+{
+    int h1, h2, h3, h4, p1, p2;
+	int matched = sscanf(response, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)", &h1, &h2, &h3, &h4, &p1, &p2);
+	if (matched != 6)
+	{
+		printf("parse response fail, sscanf matched %d items\n", matched);
+		return -1;
+	}
+
+
+    char ip[16];
+    sprintf(ip, "%d.%d.%d.%d", h1, h2, h3, h4);
+    int port = p1 * 256 + p2;
+
+    int sock_data = socket_connect(ip, port);  // Assume socket_connect is a function that connects to the server and returns a socket.
+    if (sock_data < 0)
+    {
+        printf("connect fail");
+        return -1;
+    }
+
+    return sock_data;
+}
+
+
+
+
 int ftpclient_login(int sock_ctl)
 {
 	struct command cmd;
 	char user[256];
 	memset(user,0,sizeof(user));
+
+	
+	char response[MAXSIZE];
+	memset(response,0,sizeof(response));
 
 	printf("Name: ");
 	fflush(stdout);
@@ -197,15 +267,21 @@ int ftpclient_login(int sock_ctl)
 	strcpy(cmd.arg,pass);
 	ftpclient_send_cmd(sock_ctl,&cmd);   //发送密码到服务器
 
-	int retcode=read_reply(sock_ctl);   //读取服务器的回应
+	int retcode = read_reply(sock_ctl);   //读取服务器的回应
 	switch(retcode)
 	{
 	case 430:
 		printf("Invalid username/password.\n");
 		return -1;
+
 	case 230:
-		printf("Successful login.\n");      //登录成功
+		printf("Successful login.\n");      //登录成功，发送pasv，再读取返回信息
 		break;
+		
+
+
+
+
 	default:
 		printf("error reading message from server.\n");
 		return -1;

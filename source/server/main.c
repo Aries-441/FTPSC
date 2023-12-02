@@ -1,11 +1,12 @@
 #include"ftpServer.h"
 #include<pthread.h>
 
-
+/*
 void Usage(const char *filename)
 {
 	printf("Usage: %s servet_ip server_port\n",filename);
 }
+*/
 
 void* handler_msg(void *arg)
 {
@@ -18,13 +19,15 @@ void* handler_msg(void *arg)
 
 int main(int argc,char* argv[])
 {
+	/*
 	if(argc!=3)
 	{
 		Usage(argv[0]);
 		return -1;
 	}
+	*/
 
-	int sock=socket_create(argv[1],atoi(argv[2]));
+	int sock=socket_create("127.0.0.1",21);
 	
 	while(1)
 	{

@@ -18,4 +18,5 @@ rmlogs:
 
 install:
 	mkdir -p ./install/
+	rm -rf ./install/*
 	cp ./build/* ./install

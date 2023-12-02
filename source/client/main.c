@@ -2,19 +2,19 @@
 
 void Usage(const char *filename)
 {
-	printf("Usage: %s servet_ip server_port\n",filename);
+	printf("Usage: %s servet_ip\n",filename);
 }
 
 int main(int argc,char* argv[])
 {
-	if(argc!=3)
+	if(argc!=2)
 	{
 		Usage(argv[0]);
 		return -1;
 	}
 	
 	
-	int sock_ctl=socket_connect(argv[1],atoi(argv[2]));
+	int sock_ctl=socket_connect(argv[1],21);//默认使用21端口
 	if(sock_ctl<0)
 	{
 		printf("connected failed,\n");
@@ -23,6 +23,7 @@ int main(int argc,char* argv[])
 
 	printf("Connected  to %s.\n",argv[1]);
 	print_reply(read_reply(sock_ctl));
+	
 	if(ftpclient_login(sock_ctl)<0)
 	{
 		return -1;
@@ -42,6 +43,7 @@ int main(int argc,char* argv[])
 		
 		if(send(sock_ctl,buf,strlen(buf),0)<0)  //发送命令到服务器
 		{
+			printf("send cmd failed!");
 			break;
 		}
 	
@@ -57,8 +59,11 @@ int main(int argc,char* argv[])
 		{
 			printf("%d Invalid commond.\n",status);
 		}
+
 		else        //status is 200
 		{
+			printf("status 200");
+
 			int sock_data=ftpclient_open_conn(sock_ctl);   //创建一个数据连接
 			if(sock_data<0)
 			{
@@ -71,6 +76,7 @@ int main(int argc,char* argv[])
 				ftpclient_list(sock_ctl,sock_data);
 				close(sock_data);      
 			}
+
 			else if(strcmp(cmd.code,"RETR")==0)  //retr命令
 			{
 				if(read_reply(sock_ctl)==550)  //判断服务器端文件正常
@@ -91,6 +97,23 @@ int main(int argc,char* argv[])
 					send_response(sock_ctl,200);
 				close(sock_data);      
 				print_reply(read_reply(sock_ctl));    //打印服务器端的响应
+			}
+
+			else if(strcmp(cmd.code,"PASV")==0)
+			{
+				
+				char response[MAXSIZE];
+				memset(response,0,sizeof(response));	
+
+				if (recv(sock_ctl, response, sizeof(response), 0) < 0)
+				{
+					printf("recv response fail\n");
+				}
+
+				int data_sock = ftpclient_start_pasv_data_conn(sock_ctl, response);
+				
+				printf("response:%s\n",response);
+				//close(data_sock);
 			}
 		}
 	}

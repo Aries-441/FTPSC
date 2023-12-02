@@ -3,7 +3,7 @@ CC=gcc
 DATE=$(shell date +%Y-%m-%d-%H-%M-%S)
 BUILDDIR=../../build
 LOGDIR=../../logs/$(DATE)
-OUTFILE=$(BUILDDIR)/ftpClient
+OUTFILE=$(BUILDDIR)/ClientFTP
 LOGFILE=$(LOGDIR)/clientbuild.log
 
 $(OUTFILE):$(SRC) | $(BUILDDIR) $(LOGDIR)

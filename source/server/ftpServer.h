@@ -19,6 +19,12 @@ int ftpserver_list(int sock_data,int sock_ctl);
 
 void ftpserver_retr(int sock_data,int sock_ctl,char *filename);
 
-void ftpserver_push(int sock_data,int sock_ctl,char* filename);
+void ftpserver_push(int sock_data,int sock_ctl,char *filename);
+
+void ftpserver_delet(int sock_ctl,char *filename);
+
+void ftpserver_rename(int sock_data,int sock_ctl,char *filename);
+
+
 
 #endif  //_FTP_SERVER_H__
