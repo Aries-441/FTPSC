@@ -5,11 +5,11 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-03 18:37:27
+ * @LastEditTime: 2023-12-03 21:58:09
  */
 #include"ftpServer.h"
 #define AUTH ".auth"
-
+#define FTP_PATH "./source/server/ftp/"
 int ftpserver_start_pasv_data_conn(int sock_ctl)
 {
     int sock_pasv = socket(AF_INET, SOCK_STREAM, 0);
@@ -123,7 +123,6 @@ void ftpserver_process(int sock_ctl)
 				close(sock_pasv);
 			}
 
-
 			else if(strcmp(cmd,"LIST")==0)
 			{
 				ftpserver_list(sock_data,sock_ctl);
@@ -140,11 +139,18 @@ void ftpserver_process(int sock_ctl)
 			{
 				ftpserver_delet(sock_ctl,arg);
 			}
-			else if(strcmp(cmd, "RMVD") == 0) {
-				printf("arg:%sarg\n",arg);
+			else if(strcmp(cmd, "RMVD") == 0) 
+			{
 				ftpserver_remove_directory(sock_ctl,arg);
 			}
-
+			else if(strcmp(cmd, "RNAM") == 0) 
+			{
+				ftpserver_rename_directory(sock_ctl,arg);
+			}
+			else if(strcmp(cmd, "MKND") == 0) 
+			{
+				ftpserver_make_directory(sock_ctl,arg);
+			}
 
 			close(sock_data);
 		}
@@ -174,7 +180,9 @@ int ftpserver_recv_cmd(int sock_ctl,char* cmd,char* arg)
 	else if((strcmp(cmd,"USER")==0)||(strcmp(cmd,"PASS")==0)||\
 			(strcmp(cmd,"LIST")==0)||(strcmp(cmd,"RETR")==0)||\
 			(strcmp(cmd,"PUSH")==0)||(strcmp(cmd,"PASV")==0)||\
-			(strcmp(cmd,"DELE")==0)||(strcmp(cmd,"RMVD")==0))
+			(strcmp(cmd,"DELE")==0)||(strcmp(cmd,"RMVD")==0)||\
+			(strcmp(cmd,"MKND")==0)||(strcmp(cmd,"RNAM")==0)||\
+			(strcmp(cmd,"MKND")==0))
 		status=200;
 	else{
 		status=502;
@@ -412,8 +420,6 @@ void ftpserver_delet(int sock_ctl, char *filename)
 
 int ftpserver_remove_directory(int sock_ctl, char *path)
 {
-
-	
     if((path == NULL) || (path[0] == '\0')) {
         send_response(sock_ctl, 551); // 551表示请求的操作权限不足，不可以删除根目录
         return -1;
@@ -489,6 +495,57 @@ int ftpserver_remove_directory(int sock_ctl, char *path)
         send_response(sock_ctl, 550); // 550表示请求的操作未执行，文件不可用（例如，文件未找到，未知路径）
     }
     return r;
+}
+
+
+void ftpserver_rename_directory(int sock_ctl, char *arg) {
+    char *oldname = strtok(arg, " ");
+    char *newname = strtok(NULL, " ");
+
+    if(oldname == NULL || oldname[0] == '\0' || newname == NULL || newname[0] == '\0') 
+	{
+        send_response(sock_ctl, 500); // 500 Syntax error, command unrecognized
+        return;
+    }
+
+    char full_path_old[1024];
+    memset(full_path_old,0,sizeof(full_path_old));
+    strcpy(full_path_old,"./source/server/ftp/");
+    strcat(full_path_old,oldname);
+
+    char full_path_new[1024];
+    memset(full_path_new,0,sizeof(full_path_new));
+    strcpy(full_path_new,"./source/server/ftp/");
+    strcat(full_path_new,newname);
+
+    int rename_result = rename(full_path_old, full_path_new);
+    if (rename_result == 0) 
+	{
+        send_response(sock_ctl, 250); // 250 Requested file action okay, completed
+    } 
+	else 
+	{
+        send_response(sock_ctl, 550); // 550 Requested action not taken. File unavailable
+    }
+}
+
+void ftpserver_make_directory(int sock_ctl,char *path){
+    char dir_path[512];
+    snprintf(dir_path, sizeof(dir_path), "%s%s", FTP_PATH, path);
+    
+    // Try to create the directory
+    if(mkdir(dir_path, 0755) == -1) 
+	{
+        // Send error code to client
+        // 550 Requested action not taken. File unavailable (e.g., file not found, no access).
+        send_response(sock_ctl, 550);
+    } 
+	else 
+	{
+        // Send success code to client
+        // 257 "PATHNAME" created.
+        send_response(sock_ctl, 257);
+    }
 }
 
 

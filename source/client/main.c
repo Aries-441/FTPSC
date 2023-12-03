@@ -157,6 +157,54 @@ int main(int argc,char* argv[])
 				}
 			}
 
+			else if(strcmp(cmd.code,"RNAM")==0) //RNAM重命名文件 or 目录
+			{
+				int reply = read_reply(sock_ctl);
+				if(reply == 250) 
+				{
+					printf("250 Requested file action rename okay, completed\n");
+				} 
+				else if(reply == 550) 
+				{
+					printf("550 Requested action not taken. File unavailable\n");
+				}
+				else if(reply == 500) 
+				{
+					printf("500 Syntax error, command unrecognized\n");
+				}
+			}
+
+			else if(strcmp(cmd.code,"RNAM")==0) //RNAM重命名文件 or 目录
+			{
+				int reply = read_reply(sock_ctl);
+				if(reply == 250) 
+				{
+					printf("250 Requested file action rename okay, completed\n");
+				} 
+				else if(reply == 550) 
+				{
+					printf("550 Requested action not taken. File unavailable\n");
+				}
+				else if(reply == 500) 
+				{
+					printf("500 Syntax error, command unrecognized\n");
+				}
+			}
+
+			else if(strcmp(cmd.code,"MKND")==0) //创建新的目录或者是文件
+			{
+				int reply = read_reply(sock_ctl);
+				if(reply == 257) 
+				{
+					printf("257 PATHNAME created.\n");
+				} 
+				else 
+				{
+					printf("550 Requested action not taken. File unavailable\n");
+				}
+
+			}
+
 		}
 	}
 	close(sock_ctl);

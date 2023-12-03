@@ -5,7 +5,7 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:10
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-03 16:50:08
+ * @LastEditTime: 2023-12-03 21:38:02
  */
 #include"ftpClient.h"
 #include <sys/stat.h>
@@ -59,11 +59,15 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 	read_input(buf,size);
 	char *arg=NULL;
 	arg=strtok(buf," ");     //将读取的内容以空格分隔
-	arg=strtok(NULL," ");    //指向输入的命令所带的参数
-	if(NULL!=arg)
-		strncpy(cmd->arg,arg,strlen(arg));
 
-	if((strncmp(buf,"ls",4)==0) || strncmp(buf,"list",4)==0 || strncmp(buf,"LIST",4)==0)
+	if(arg != NULL) {
+		arg = strtok(NULL, "");  //获取所有参数
+		if(arg != NULL) {
+			strncpy(cmd->arg, arg, sizeof(cmd->arg)-1); //将所有参数复制到cmd->arg中
+		}
+	}
+
+	if((strncmp(buf,"ls",2)==0) || strncmp(buf,"list",4)==0 || strncmp(buf,"LIST",4)==0)
 		strcpy(cmd->code,"LIST");
 	else if((strncmp(buf,"get",3)==0) || strncmp(buf,"retr",4)==0 || strncmp(buf,"RETR",4)==0)
 		strcpy(cmd->code,"RETR");
@@ -77,13 +81,17 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 		strcpy(cmd->code,"DELE");
 	else if((strncmp(buf,"rmd",3)==0) || (strncmp(buf,"RMD",3)==0))
 		strcpy(cmd->code,"RMVD");
+	else if((strncmp(buf,"rnam",4)==0) || (strncmp(buf,"RNAM",4)==0))
+		strcpy(cmd->code,"RNAM");
+	else if((strncmp(buf,"MKND",4)==0) || (strncmp(buf,"mknd",4)==0))
+		strcpy(cmd->code,"MKND");
 	else
 		return -1;
 
 	//将这个命令再存到buf中
 	memset(buf,0,size);
 	strcpy(buf,cmd->code);
-	if(NULL!=arg)        //如果命令带参数的话，追加到命令后面
+	if(strlen(cmd->arg) > 0)        //如果命令带参数的话，追加到命令后面
 	{	
 		strcat(buf," ");
 		strncat(buf,cmd->arg,strlen(cmd->arg));
@@ -91,6 +99,7 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 	printf("buf:%s\n",buf);
 	return 0;
 }
+
 
 int ftpclient_put(int sock_data,char *filename)
 {
@@ -252,7 +261,6 @@ int ftpclient_login(int sock_ctl)
 	char user[256];
 	memset(user,0,sizeof(user));
 
-	
 	char response[MAXSIZE];
 	memset(response,0,sizeof(response));
 
