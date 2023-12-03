@@ -1,4 +1,0 @@
-total 12
--rw-rw-r-- 1 ljj ljj  71  6月 10  2018 file
--rw-rw-r-- 1 ljj ljj 600  6月 10  2018 main
--rw-rw-r-- 1 ljj ljj 142  6月 10  2018 test

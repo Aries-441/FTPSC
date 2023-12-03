@@ -1,3 +1,12 @@
+/*
+ * @FileName: 
+ * @Description: 
+ * @Autor: Liujunjie/Aries-441
+ * @StudentNumber: 521021911059
+ * @Date: 2023-11-30 21:37:02
+ * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
+ * @LastEditTime: 2023-12-03 18:37:27
+ */
 #include"ftpServer.h"
 #define AUTH ".auth"
 
@@ -131,6 +140,11 @@ void ftpserver_process(int sock_ctl)
 			{
 				ftpserver_delet(sock_ctl,arg);
 			}
+			else if(strcmp(cmd, "RMVD") == 0) {
+				printf("arg:%sarg\n",arg);
+				ftpserver_remove_directory(sock_ctl,arg);
+			}
+
 
 			close(sock_data);
 		}
@@ -160,7 +174,7 @@ int ftpserver_recv_cmd(int sock_ctl,char* cmd,char* arg)
 	else if((strcmp(cmd,"USER")==0)||(strcmp(cmd,"PASS")==0)||\
 			(strcmp(cmd,"LIST")==0)||(strcmp(cmd,"RETR")==0)||\
 			(strcmp(cmd,"PUSH")==0)||(strcmp(cmd,"PASV")==0)||\
-			(strcmp(cmd,"DELE")==0)||(strcmp(cmd,"RNAM")==0))
+			(strcmp(cmd,"DELE")==0)||(strcmp(cmd,"RMVD")==0))
 		status=200;
 	else{
 		status=502;
@@ -367,16 +381,116 @@ void ftpserver_push(int sock_data,int sock_ctl,char* filename)
 	close(fd);
 }
 
+
 void ftpserver_delet(int sock_ctl, char *filename)
 {
 	char name[260];
 	memset(name, 0, sizeof(name));
 	strcpy(name, "./source/server/ftp/");
 	strcat(name, filename);
-	
-	if (remove(name) == 0)
+
+	if (remove(name) == 0) {
 		send_response(sock_ctl,250); //文件删除成功
-	else
-		send_response(sock_ctl,550); //删除文件失败，可能文件不存在或者权限不足
+	} else {
+		switch (errno) {
+			case ENOENT:
+				send_response(sock_ctl,550); //文件不存在
+				break;
+			case EACCES:
+				send_response(sock_ctl,551); //权限不足
+				break;
+			case EBUSY:
+				send_response(sock_ctl,552); //文件正在被其他进程使用
+				break;
+			default:
+				send_response(sock_ctl,553); //其他错误
+				break;
+		}
+	}
 }
+
+
+int ftpserver_remove_directory(int sock_ctl, char *path)
+{
+
+	
+    if((path == NULL) || (path[0] == '\0')) {
+        send_response(sock_ctl, 551); // 551表示请求的操作权限不足，不可以删除根目录
+        return -1;
+    }
+    
+    char full_path[1024];
+    memset(full_path,0,sizeof(full_path));
+    strcpy(full_path,"./source/server/ftp/");
+    strcat(full_path,path);
+
+    DIR *d = opendir(full_path);
+    size_t path_len = strlen(full_path);
+    int r = -1;
+
+    if (d)
+    {
+        struct dirent *p;
+        r = 0;
+
+        while (!r && (p=readdir(d)))
+        {
+            int r2 = -1;
+            char *buf;
+            size_t len;
+
+            /* Skip the names "." and ".." as we don't want to recurse on them. */
+            if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+            {
+                continue;
+            }
+
+            len = path_len + strlen(p->d_name) + 2; 
+            buf = malloc(len);
+
+            if (buf)
+            {
+                struct stat statbuf;
+                snprintf(buf, len, "%s/%s", full_path, p->d_name);
+
+                if (!stat(buf, &statbuf))
+                {
+                    if (S_ISDIR(statbuf.st_mode))
+                    {
+                        char relative_path[1024];
+                        snprintf(relative_path, sizeof(relative_path), "%s/%s", path, p->d_name);
+                        r2 = ftpserver_remove_directory(sock_ctl, relative_path);
+                    }
+                    else
+                    {
+                        r2 = unlink(buf);
+                    }
+                }
+
+                free(buf);
+            }
+
+            r = r2;
+        }
+
+        closedir(d);
+    }
+
+    if (!r)
+    {
+        r = rmdir(full_path);
+        if (r != 0) {
+            send_response(sock_ctl, 550); // 550表示请求的操作未执行，文件不可用（例如，文件未找到，未知路径）
+        } else {
+            send_response(sock_ctl, 250); // 250表示请求的文件操作正确，已完成
+        }
+    }
+    else {
+        send_response(sock_ctl, 550); // 550表示请求的操作未执行，文件不可用（例如，文件未找到，未知路径）
+    }
+    return r;
+}
+
+
+
 

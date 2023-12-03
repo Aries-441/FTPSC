@@ -1,3 +1,12 @@
+/*
+ * @FileName: 
+ * @Description: 
+ * @Autor: Liujunjie/Aries-441
+ * @StudentNumber: 521021911059
+ * @Date: 2023-11-30 21:37:10
+ * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
+ * @LastEditTime: 2023-12-03 16:50:08
+ */
 #include"ftpClient.h"
 #include <sys/stat.h>
 #include <sys/sendfile.h>
@@ -56,7 +65,7 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 
 	if((strncmp(buf,"ls",4)==0) || strncmp(buf,"list",4)==0 || strncmp(buf,"LIST",4)==0)
 		strcpy(cmd->code,"LIST");
-	else if((strncmp(buf,"get",4)==0) || strncmp(buf,"retr",4)==0 || strncmp(buf,"RETR",4)==0)
+	else if((strncmp(buf,"get",3)==0) || strncmp(buf,"retr",4)==0 || strncmp(buf,"RETR",4)==0)
 		strcpy(cmd->code,"RETR");
 	else if((strncmp(buf,"bye",3)==0) || (strncmp(buf,"exit",4)==0) || (strncmp(buf,"quit",4)==0))
 		strcpy(cmd->code,"QUIT");
@@ -64,8 +73,10 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 		strcpy(cmd->code,"PUSH");
 	else if((strncmp(buf,"pasv",4)==0) || (strncmp(buf,"PASV",4)==0))
 		strcpy(cmd->code,"PASV");
-	else if((strncmp(buf,"delete",4)==0) || (strncmp(buf,"dele",4)==0))
+	else if((strncmp(buf,"DELE",4)==0) || (strncmp(buf,"dele",4)==0))
 		strcpy(cmd->code,"DELE");
+	else if((strncmp(buf,"rmd",3)==0) || (strncmp(buf,"RMD",3)==0))
+		strcpy(cmd->code,"RMVD");
 	else
 		return -1;
 
@@ -77,6 +88,7 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 		strcat(buf," ");
 		strncat(buf,cmd->arg,strlen(cmd->arg));
 	}
+	printf("buf:%s\n",buf);
 	return 0;
 }
 
@@ -220,8 +232,6 @@ int ftpclient_start_pasv_data_conn(int sock_ctl, char* response)
 		printf("parse response fail, sscanf matched %d items\n", matched);
 		return -1;
 	}
-
-
     char ip[16];
     sprintf(ip, "%d.%d.%d.%d", h1, h2, h3, h4);
     int port = p1 * 256 + p2;
@@ -232,11 +242,8 @@ int ftpclient_start_pasv_data_conn(int sock_ctl, char* response)
         printf("connect fail");
         return -1;
     }
-
     return sock_data;
 }
-
-
 
 
 int ftpclient_login(int sock_ctl)
@@ -278,10 +285,6 @@ int ftpclient_login(int sock_ctl)
 		printf("Successful login.\n");      //登录成功，发送pasv，再读取返回信息
 		break;
 		
-
-
-
-
 	default:
 		printf("error reading message from server.\n");
 		return -1;

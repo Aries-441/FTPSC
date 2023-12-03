@@ -1,3 +1,1 @@
 total 0
--rwxrwxrwx 1 ljj ljj  71 Jun 10  2018 file
--rwxrwxrwx 1 ljj ljj 142 Jun 10  2018 test

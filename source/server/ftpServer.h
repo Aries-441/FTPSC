@@ -2,8 +2,12 @@
 #define _FTP_SERVER_H__
 
 #include"../common/common.h"
-#include<sys/stat.h>
-
+#include <dirent.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <sys/stat.h>
 
 void ftpserver_process(int sock_ctl);
 
@@ -24,6 +28,8 @@ void ftpserver_push(int sock_data,int sock_ctl,char *filename);
 void ftpserver_delet(int sock_ctl,char *filename);
 
 void ftpserver_rename(int sock_data,int sock_ctl,char *filename);
+
+int ftpserver_remove_directory(int sock_ctl,char *path);
 
 
 

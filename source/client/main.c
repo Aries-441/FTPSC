@@ -62,7 +62,7 @@ int main(int argc,char* argv[])
 
 		else        //status is 200
 		{
-			printf("status 200");
+			//printf("status 200");
 
 			int sock_data=ftpclient_open_conn(sock_ctl);   //创建一个数据连接
 			if(sock_data<0)
@@ -99,9 +99,8 @@ int main(int argc,char* argv[])
 				print_reply(read_reply(sock_ctl));    //打印服务器端的响应
 			}
 
-			else if(strcmp(cmd.code,"PASV")==0)
-			{
-				
+			else if(strcmp(cmd.code,"PASV")==0) //PASV命令
+			{				
 				char response[MAXSIZE];
 				memset(response,0,sizeof(response));	
 
@@ -115,6 +114,49 @@ int main(int argc,char* argv[])
 				printf("response:%s\n",response);
 				//close(data_sock);
 			}
+			
+			else if(strcmp(cmd.code,"DELE")==0) //RMD删除文件夹命令
+			{
+				int reply = read_reply(sock_ctl);
+				if(reply == 250) 
+				{
+					printf("Successfully deleted file %s\n", cmd.arg);
+				} 
+				else if(reply == 550) 
+				{
+					printf("File %s does not exist \n", cmd.arg);
+				}
+				else if(reply == 551) 
+				{
+					printf("You don't have permission to delete the file %s\n", cmd.arg);
+				}
+				else if(reply == 552)
+				{
+					printf("The file %s is being occupied by another process\n", cmd.arg);
+				}
+				else
+				{
+					printf("Other errors!\n");
+				}
+			}
+
+			else if(strcmp(cmd.code,"RMVD")==0) //RMD删除文件夹命令
+			{
+				int reply = read_reply(sock_ctl);
+				if(reply == 250) 
+				{
+					printf("Successfully removed directory %s\n", cmd.arg);
+				} 
+				else if(reply == 550) 
+				{
+					printf("Error removing directory %s\n", cmd.arg);
+				}
+				else if(reply == 551) 
+				{
+					printf("You are not allowed to remove the root directory!\n " );
+				}
+			}
+
 		}
 	}
 	close(sock_ctl);
