@@ -5,11 +5,16 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-03 21:58:09
+ * @LastEditTime: 2023-12-04 14:18:07
  */
+
 #include"ftpServer.h"
 #define AUTH ".auth"
-#define FTP_PATH "./source/server/ftp/"
+
+extern char UserName[MAXSIZE];
+extern char FTP_PATH[MAXSIZE];
+
+
 int ftpserver_start_pasv_data_conn(int sock_ctl)
 {
     int sock_pasv = socket(AF_INET, SOCK_STREAM, 0);
@@ -80,6 +85,11 @@ void ftpserver_process(int sock_ctl)
 		return;
 	}
 
+	//创建与用户名同名的子文件夹并
+	ftpserver_make_directory(sock_ctl,UserName);
+	strcat(FTP_PATH,UserName);
+	strcat(FTP_PATH,"/");
+
 	char cmd[5];
 	char arg[MAXSIZE];
 	while(1)
@@ -101,26 +111,7 @@ void ftpserver_process(int sock_ctl)
 
 			if(strcmp(cmd,"PASV")==0)
 			{
-				int sock_pasv = ftpserver_start_pasv_data_conn(sock_ctl);
-				if (sock_pasv < 0)
-				{
-					
-					//print_log()
-					return;
-				}
-
-				struct sockaddr_in client_addr;
-				socklen_t len = sizeof(client_addr);
-				sock_data = accept(sock_pasv, (struct sockaddr*)&client_addr, &len);
-				if (sock_data < 0)
-				{
-					
-					close(sock_pasv);
-					//print_log()
-					return;
-				}
-
-				close(sock_pasv);
+				ftpserver_pasv(sock_data,sock_ctl);
 			}
 
 			else if(strcmp(cmd,"LIST")==0)
@@ -181,8 +172,7 @@ int ftpserver_recv_cmd(int sock_ctl,char* cmd,char* arg)
 			(strcmp(cmd,"LIST")==0)||(strcmp(cmd,"RETR")==0)||\
 			(strcmp(cmd,"PUSH")==0)||(strcmp(cmd,"PASV")==0)||\
 			(strcmp(cmd,"DELE")==0)||(strcmp(cmd,"RMVD")==0)||\
-			(strcmp(cmd,"MKND")==0)||(strcmp(cmd,"RNAM")==0)||\
-			(strcmp(cmd,"MKND")==0))
+			(strcmp(cmd,"MKND")==0)||(strcmp(cmd,"RNAM")==0))
 		status=200;
 	else{
 		status=502;
@@ -214,7 +204,9 @@ int ftpserver_login(int sock_ctl)
 	int j=0;
 	while(buf[i]!=0)       //将用户名保存起来
 		user[j++]=buf[i++];
-	
+
+	strcpy(UserName, user);//将用户名存入全局变量用作访问控制
+
 	send_response(sock_ctl,331);    //通知用户输入密码
 
 	memset(buf,0,MAXSIZE);
@@ -299,9 +291,48 @@ int ftpserver_start_data_conn(int sock_ctl)
 	return sock_data;
 }
 
+void ftpserver_pasv(int sock_data,int sock_ctl)
+{
+	int sock_pasv = ftpserver_start_pasv_data_conn(sock_ctl);
+	if (sock_pasv < 0)
+	{
+		
+		//print_log()
+		return;
+	}
+
+	struct sockaddr_in client_addr;
+	socklen_t len = sizeof(client_addr);
+	sock_data = accept(sock_pasv, (struct sockaddr*)&client_addr, &len);
+	if (sock_data < 0)
+	{
+		
+		close(sock_pasv);
+		//print_log()
+		return;
+	}
+
+	close(sock_pasv);
+}
+
 int ftpserver_list(int sock_data,int sock_ctl)
 {
-	int ret=system("ls -l ./source/server/ftp > temp.txt");	
+	char aclfile[260];
+	memset(aclfile, 0, sizeof(aclfile));
+	strcpy(aclfile, FTP_PATH);
+	strcat(aclfile, "/ctl.acl");
+
+	//检查是否具有list权限
+	if(check_permissions(UserName, "LIST", aclfile) == 0)
+	{
+		send_response(sock_ctl, 550);//无权限
+		return -1;
+	}
+
+	char command[256];
+	snprintf(command, sizeof(command), "ls -l %s > temp.txt", FTP_PATH);
+	int ret = system(command);
+
 	if(ret<0)
 	{
 		//print_log
@@ -325,7 +356,7 @@ void ftpserver_retr(int sock_data,int sock_ctl,char *filename)
 {
 	char name[260];
 	memset(name,0,sizeof(name));
-	strcpy(name,"./source/server/ftp/");
+	strcpy(name,FTP_PATH);
 	strcat(name,filename);
 	int fd=open(name,O_RDONLY);
 	if(fd<0)
@@ -394,7 +425,7 @@ void ftpserver_delet(int sock_ctl, char *filename)
 {
 	char name[260];
 	memset(name, 0, sizeof(name));
-	strcpy(name, "./source/server/ftp/");
+	strcpy(name, FTP_PATH);
 	strcat(name, filename);
 
 	if (remove(name) == 0) {
@@ -427,7 +458,7 @@ int ftpserver_remove_directory(int sock_ctl, char *path)
     
     char full_path[1024];
     memset(full_path,0,sizeof(full_path));
-    strcpy(full_path,"./source/server/ftp/");
+    strcpy(full_path,FTP_PATH);
     strcat(full_path,path);
 
     DIR *d = opendir(full_path);
@@ -510,12 +541,12 @@ void ftpserver_rename_directory(int sock_ctl, char *arg) {
 
     char full_path_old[1024];
     memset(full_path_old,0,sizeof(full_path_old));
-    strcpy(full_path_old,"./source/server/ftp/");
+    strcpy(full_path_old,FTP_PATH);
     strcat(full_path_old,oldname);
 
     char full_path_new[1024];
     memset(full_path_new,0,sizeof(full_path_new));
-    strcpy(full_path_new,"./source/server/ftp/");
+    strcpy(full_path_new,FTP_PATH);
     strcat(full_path_new,newname);
 
     int rename_result = rename(full_path_old, full_path_new);

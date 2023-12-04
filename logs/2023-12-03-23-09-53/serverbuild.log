@@ -1,0 +1,36 @@
+main.c: In function ‘handler_msg’:
+main.c:14:18: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   14 |         int sock=(int)arg;
+      |                  ^
+main.c: In function ‘main’:
+main.c:40:54: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+   40 |                 pthread_create(&tid,NULL,handler_msg,(void*)connf);
+      |                                                      ^
+ftpServer.c:13:1: error: expected ‘,’ or ‘;’ before ‘char’
+   13 | char USERNAME[MAXSIZE];
+      | ^~~~
+ftpServer.c: In function ‘ftpserver_process’:
+ftpServer.c:80:51: error: ‘USERNAME’ undeclared (first use in this function)
+   80 |                 ftpserver_make_directory(sock_ctl,USERNAME);
+      |                                                   ^~~~~~~~
+ftpServer.c:80:51: note: each undeclared identifier is reported only once for each function it appears in
+ftpServer.c: In function ‘ftpserver_login’:
+ftpServer.c:206:16: error: ‘USERNAME’ undeclared (first use in this function)
+  206 |         strcpy(USERNAME, user);//将用户名存入全局变量用作访问控制
+      |                ^~~~~~~~
+ftpServer.c: In function ‘ftpserver_check_user’:
+ftpServer.c:240:33: warning: passing argument 2 of ‘getline’ from incompatible pointer type [-Wincompatible-pointer-types]
+  240 |         while(-1!=getline(&line,&len,fd))
+      |                                 ^~~~
+      |                                 |
+      |                                 int *
+In file included from ../common/common.h:4,
+                 from ftpServer.h:4,
+                 from ftpServer.c:10:
+/usr/include/stdio.h:646:46: note: expected ‘size_t * restrict’ {aka ‘long unsigned int * restrict’} but argument is of type ‘int *’
+  646 |                           size_t *__restrict __n,
+      |                           ~~~~~~~~~~~~~~~~~~~^~~
+ftpServer.c: In function ‘ftpserver_list’:
+ftpServer.c:331:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+  331 |         sendfile(sock_data,fd,NULL,size);
+      |         ^~~~~~~~

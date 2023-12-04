@@ -1,0 +1,82 @@
+main.c: In function ‘handler_msg’:
+main.c:17:18: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   17 |         int sock=(int)arg;
+      |                  ^
+main.c: In function ‘main’:
+main.c:43:54: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+   43 |                 pthread_create(&tid,NULL,handler_msg,(void*)connf);
+      |                                                      ^
+ftpServer.c:13:9: warning: type defaults to ‘int’ in declaration of ‘UserName’ [-Wimplicit-int]
+   13 | extern  UserName[MAXSIZE];
+      |         ^~~~~~~~
+ftpServer.c:14:10: warning: type defaults to ‘int’ in declaration of ‘FTP_PATH’ [-Wimplicit-int]
+   14 | extern  *FTP_PATH;
+      |          ^~~~~~~~
+ftpServer.c: In function ‘ftpserver_process’:
+ftpServer.c:82:51: warning: passing argument 2 of ‘ftpserver_make_directory’ from incompatible pointer type [-Wincompatible-pointer-types]
+   82 |                 ftpserver_make_directory(sock_ctl,UserName);
+      |                                                   ^~~~~~~~
+      |                                                   |
+      |                                                   int *
+In file included from ftpServer.c:10:
+ftpServer.h:39:50: note: expected ‘char *’ but argument is of type ‘int *’
+   39 | void ftpserver_make_directory(int sock_ctl,char *path);
+      |                                            ~~~~~~^~~~
+ftpServer.c:83:24: warning: passing argument 1 of ‘strcat’ from incompatible pointer type [-Wincompatible-pointer-types]
+   83 |                 strcat(FTP_PATH,UserName);
+      |                        ^~~~~~~~
+      |                        |
+      |                        int *
+In file included from ../common/common.h:6,
+                 from ftpServer.h:4,
+                 from ftpServer.c:10:
+/usr/include/string.h:149:39: note: expected ‘char * restrict’ but argument is of type ‘int *’
+  149 | extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+      |                      ~~~~~~~~~~~~~~~~~^~~~~~
+ftpServer.c:83:33: warning: passing argument 2 of ‘strcat’ from incompatible pointer type [-Wincompatible-pointer-types]
+   83 |                 strcat(FTP_PATH,UserName);
+      |                                 ^~~~~~~~
+      |                                 |
+      |                                 int *
+In file included from ../common/common.h:6,
+                 from ftpServer.h:4,
+                 from ftpServer.c:10:
+/usr/include/string.h:149:70: note: expected ‘const char * restrict’ but argument is of type ‘int *’
+  149 | extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+      |                                               ~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+ftpServer.c: In function ‘ftpserver_login’:
+ftpServer.c:208:16: warning: passing argument 1 of ‘strcpy’ from incompatible pointer type [-Wincompatible-pointer-types]
+  208 |         strcpy(UserName, user);//将用户名存入全局变量用作访问控制
+      |                ^~~~~~~~
+      |                |
+      |                int *
+In file included from ../common/common.h:6,
+                 from ftpServer.h:4,
+                 from ftpServer.c:10:
+/usr/include/string.h:141:39: note: expected ‘char * restrict’ but argument is of type ‘int *’
+  141 | extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+      |                      ~~~~~~~~~~~~~~~~~^~~~~~
+ftpServer.c: In function ‘ftpserver_check_user’:
+ftpServer.c:242:33: warning: passing argument 2 of ‘getline’ from incompatible pointer type [-Wincompatible-pointer-types]
+  242 |         while(-1!=getline(&line,&len,fd))
+      |                                 ^~~~
+      |                                 |
+      |                                 int *
+In file included from ../common/common.h:4,
+                 from ftpServer.h:4,
+                 from ftpServer.c:10:
+/usr/include/stdio.h:646:46: note: expected ‘size_t * restrict’ {aka ‘long unsigned int * restrict’} but argument is of type ‘int *’
+  646 |                           size_t *__restrict __n,
+      |                           ~~~~~~~~~~~~~~~~~~~^~~
+ftpServer.c: In function ‘ftpserver_list’:
+ftpServer.c:333:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+  333 |         sendfile(sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+ftpServer.c: In function ‘ftpserver_make_directory’:
+ftpServer.c:550:44: warning: format ‘%s’ expects argument of type ‘char *’, but argument 4 has type ‘int *’ [-Wformat=]
+  550 |     snprintf(dir_path, sizeof(dir_path), "%s%s", FTP_PATH, path);
+      |                                           ~^     ~~~~~~~~
+      |                                            |     |
+      |                                            |     int *
+      |                                            char *
+      |                                           %ls

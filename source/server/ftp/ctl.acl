@@ -1,0 +1,16 @@
+LIST:
+    liufan
+RETR:
+    liu111,
+    liu222,
+    liu333
+PUSH:
+
+DELE:
+    root,
+    ljj
+RMVD:
+
+MKND:
+
+RNAM:

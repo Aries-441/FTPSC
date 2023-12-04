@@ -1,6 +1,9 @@
 #include"ftpServer.h"
 #include<pthread.h>
 
+char UserName[MAXSIZE];
+char FTP_PATH[MAXSIZE] = "./source/server/ftp/";
+
 /*
 void Usage(const char *filename)
 {

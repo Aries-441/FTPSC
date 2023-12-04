@@ -121,6 +121,43 @@ void trimstr(char* str,int n)   //去除字符串中的空白和换行
 	}
 }
 
+int user_has_permission(char *UserName, char *PermissionList) {
+    char *token = strtok(PermissionList, ",");
+    while (token != NULL) {
+        if (strcmp(UserName, token) == 0) {
+            return 1; // User has permission
+        }
+        token = strtok(NULL, ",");
+    }
+    return 0; // User does not have permission
+}
+
+int check_permissions(char *UserName, char *PermissionType, char *aclFilePath) {
+    FILE *file = fopen(aclFilePath, "r");
+    if (file == NULL) {
+        printf("Could not open file %s\n", aclFilePath);
+        return 0; // Could not open file
+    }
+
+    char line[MAXSIZE];
+    while (fgets(line, sizeof(line), file)) {
+        // Remove newline character
+        line[strcspn(line, "\n")] = 0;
+
+        // Check if line contains permission type
+        char *currentPermissionType = strtok(line, ":");
+        char *permissionList = strtok(NULL, ":");
+
+        if (strcmp(PermissionType, currentPermissionType) == 0 &&
+            user_has_permission(UserName, permissionList)) {
+            fclose(file);
+            return 1; // User has permission
+        }
+    }
+
+    fclose(file);
+    return 0; // User does not have permission
+}
 
 
 

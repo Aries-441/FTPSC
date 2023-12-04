@@ -1,2 +1,2 @@
 total 0
-drwxrwxrwx 1 ljj ljj 4096 Dec  3 18:28 test1
+-rwxrwxrwx 1 ljj ljj 0 Dec  3 23:27 liu111

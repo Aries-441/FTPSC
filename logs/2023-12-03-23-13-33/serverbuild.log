@@ -1,0 +1,27 @@
+main.c: In function ‘handler_msg’:
+main.c:14:18: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+   14 |         int sock=(int)arg;
+      |                  ^
+main.c: In function ‘main’:
+main.c:40:54: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+   40 |                 pthread_create(&tid,NULL,handler_msg,(void*)connf);
+      |                                                      ^
+ftpServer.c: In function ‘ftpserver_check_user’:
+ftpServer.c:240:33: warning: passing argument 2 of ‘getline’ from incompatible pointer type [-Wincompatible-pointer-types]
+  240 |         while(-1!=getline(&line,&len,fd))
+      |                                 ^~~~
+      |                                 |
+      |                                 int *
+In file included from ../common/common.h:4,
+                 from ftpServer.h:4,
+                 from ftpServer.c:10:
+/usr/include/stdio.h:646:46: note: expected ‘size_t * restrict’ {aka ‘long unsigned int * restrict’} but argument is of type ‘int *’
+  646 |                           size_t *__restrict __n,
+      |                           ~~~~~~~~~~~~~~~~~~~^~~
+ftpServer.c: In function ‘ftpserver_list’:
+ftpServer.c:331:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+  331 |         sendfile(sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+/usr/bin/ld: /tmp/ccVITgGn.o:(.bss+0x0): multiple definition of `UserName'; /tmp/ccEPvlX4.o:(.bss+0x0): first defined here
+/usr/bin/ld: /tmp/ccVITgGn.o:(.data.rel.local+0x0): multiple definition of `FTP_PATH'; /tmp/ccEPvlX4.o:(.data.rel.local+0x0): first defined here
+collect2: error: ld returned 1 exit status

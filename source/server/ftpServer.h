@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+
 void ftpserver_process(int sock_ctl);
 
 int ftpserver_recv_cmd(int sock_ctl,char* cmd,char* arg);
@@ -20,6 +21,8 @@ int ftpserver_login(int sock_ctl);
 int ftpserver_check_user(const char* user,const char* pass);
 
 int ftpserver_start_data_conn(int sock_ctl);
+
+void ftpserver_pasv(int sock_data,int sock_ctl);
 
 int ftpserver_list(int sock_data,int sock_ctl);
 
