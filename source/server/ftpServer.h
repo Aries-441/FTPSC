@@ -11,31 +11,39 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+typedef struct {
+    int sock_ctl; // control socket
+    int sock_data; // data socket
+    char UserName[MAXSIZE];
+    char FTP_PATH[MAXSIZE];
+} UserSession;
 
-void ftpserver_process(int sock_ctl);
+void ftpserver_process(UserSession *session);
 
-int ftpserver_recv_cmd(int sock_ctl,char* cmd,char* arg);
+int ftpserver_recv_cmd(UserSession *session,char* cmd,char* arg);
 
-int ftpserver_login(int sock_ctl);
+int ftpserver_login(UserSession *session);
 
 int ftpserver_check_user(const char* user,const char* pass);
 
 int ftpserver_start_data_conn(int sock_ctl);
 
-void ftpserver_pasv(int sock_data,int sock_ctl);
+int ftpserver_start_pasv_data_conn(int sock_ctl);
 
-int ftpserver_list(int sock_data,int sock_ctl);
+void ftpserver_pasv(UserSession *session);
 
-void ftpserver_retr(int sock_data,int sock_ctl,char *filename);
+int ftpserver_list(UserSession *session);
 
-void ftpserver_push(int sock_data,int sock_ctl,char *filename);
+void ftpserver_retr(UserSession *session,char *filename);
 
-void ftpserver_delet(int sock_ctl,char *filename);
+void ftpserver_push(UserSession *session,char *filename);
 
-void ftpserver_rename_directory(int sock_ctl,char *path);
+void ftpserver_delet(UserSession *session,char *filename);
 
-int ftpserver_remove_directory(int sock_ctl,char *path);
+void ftpserver_rename_directory(UserSession *session,char *path);
 
-void ftpserver_make_directory(int sock_ctl,char *path);
+int ftpserver_remove_directory(UserSession *session,char *path);
+
+void ftpserver_make_directory(UserSession *session,char *path);
 
 #endif  //_FTP_SERVER_H__

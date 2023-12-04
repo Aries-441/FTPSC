@@ -5,15 +5,12 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-04 14:18:07
+ * @LastEditTime: 2023-12-04 20:19:51
  */
+
 
 #include"ftpServer.h"
 #define AUTH ".auth"
-
-extern char UserName[MAXSIZE];
-extern char FTP_PATH[MAXSIZE];
-
 
 int ftpserver_start_pasv_data_conn(int sock_ctl)
 {
@@ -67,88 +64,94 @@ int ftpserver_start_pasv_data_conn(int sock_ctl)
 
 	printf("Server response: %s\n", response);
 
-
     return sock_pasv;
 }
 
-void ftpserver_process(int sock_ctl)
+void ftpserver_process(UserSession *session)
 {
-	send_response(sock_ctl,220);   //发送接受处理响应码
+    send_response(session->sock_ctl,220);   //发送接受处理响应码
 
-	if(1==ftpserver_login(sock_ctl) || 1)    //登录成功
-	{
-		send_response(sock_ctl,230);  
-	}
-	else                         //登录失败，结束本次会话
-	{
-		send_response(sock_ctl,430);  
-		return;
-	}
+    if(1==ftpserver_login(session) || 1)    //登录成功
+    {
+        send_response(session->sock_ctl,230);  
+    }
+    else                         //登录失败，结束本次会话
+    {
+        send_response(session->sock_ctl,430);  
+        return;
+    }
 
-	//创建与用户名同名的子文件夹并
-	ftpserver_make_directory(sock_ctl,UserName);
-	strcat(FTP_PATH,UserName);
-	strcat(FTP_PATH,"/");
+    //创建与用户名同名的子文件夹
+    ftpserver_make_directory(session,session->UserName);
+    strcat(session->FTP_PATH, session->UserName);
+    strcat(session->FTP_PATH, "/");
 
-	char cmd[5];
-	char arg[MAXSIZE];
-	while(1)
-	{
-		//接收命令，解析，获取命令和参数
-		int status=ftpserver_recv_cmd(sock_ctl,cmd,arg);
-		if((status<0)||(221==status))   //出错或者时QUIT
-			break;
+    char cmd[5];
+    char arg[MAXSIZE];
+    while(1)
+    {
+        //接收命令，解析，获取命令和参数
+        int status=ftpserver_recv_cmd(session, cmd, arg);
+        if((status<0)||(221==status))   //出错或者时QUIT
+            break;
+            
+        if(200==status)     //处理
+        {
+            session->sock_data=ftpserver_start_data_conn(session->sock_ctl);
+
+            if(session->sock_data<0)
+            {
+                //close(session->sock);
+                printf("data链接异常中断\n");
+                return;
+            }
+
+            if(strcmp(cmd,"PASV")==0)
+            {
+                ftpserver_pasv(session);
+            }
+
+            else if(strcmp(cmd,"LIST")==0)
+            {
+                ftpserver_list(session);
+            }
+            else if(strcmp(cmd,"RETR")==0)
+            {
+                ftpserver_retr(session, arg);
+            }
+            else if(strcmp(cmd,"PUSH")==0)
+            {
+                ftpserver_push(session, arg);
+            }
+            else if(strcmp(cmd,"DELE")==0)
+            {
+                ftpserver_delet(session, arg);
+            }
+            else if(strcmp(cmd, "RMVD") == 0) 
+            {
+                ftpserver_remove_directory(session, arg);
+            }
+            else if(strcmp(cmd, "RNAM") == 0) 
+            {
+                ftpserver_rename_directory(session, arg);
+            }
+            else if(strcmp(cmd, "MKND") == 0) 
+            {
+                ftpserver_make_directory(session, arg);
+            }
+
 			
-		if(200==status)     //处理
-		{
-			int sock_data=ftpserver_start_data_conn(sock_ctl);
-			if(sock_data<0)
-				{
-					//close(sock_ctl);
-					//printf
-					return;
-				}
-
-			if(strcmp(cmd,"PASV")==0)
-			{
-				ftpserver_pasv(sock_data,sock_ctl);
+			if(session->sock_data >= 0) {
+				close(session->sock_data);
+				session->sock_data = -1;
 			}
 
-			else if(strcmp(cmd,"LIST")==0)
-			{
-				ftpserver_list(sock_data,sock_ctl);
-			}
-			else if(strcmp(cmd,"RETR")==0)
-			{
-				ftpserver_retr(sock_data,sock_ctl,arg);
-			}
-			else if(strcmp(cmd,"PUSH")==0)
-			{
-				ftpserver_push(sock_data,sock_ctl,arg);
-			}
-			else if(strcmp(cmd,"DELE")==0)
-			{
-				ftpserver_delet(sock_ctl,arg);
-			}
-			else if(strcmp(cmd, "RMVD") == 0) 
-			{
-				ftpserver_remove_directory(sock_ctl,arg);
-			}
-			else if(strcmp(cmd, "RNAM") == 0) 
-			{
-				ftpserver_rename_directory(sock_ctl,arg);
-			}
-			else if(strcmp(cmd, "MKND") == 0) 
-			{
-				ftpserver_make_directory(sock_ctl,arg);
-			}
-
-			close(sock_data);
-		}
-	}
+        }
+    }
 }
 
-int ftpserver_recv_cmd(int sock_ctl,char* cmd,char* arg)
+
+int ftpserver_recv_cmd(UserSession *session,char* cmd,char* arg)
 {
 	int status=200;
 	char buf[MAXSIZE];
@@ -157,7 +160,7 @@ int ftpserver_recv_cmd(int sock_ctl,char* cmd,char* arg)
 	memset(cmd,0,5);
 	memset(arg,0,MAXSIZE);
 
-	if(-1==recv_data(sock_ctl,buf,MAXSIZE))
+	if(-1==recv_data(session->sock_ctl,buf,MAXSIZE))
 	{
 		//print_log()
 		return -1;
@@ -180,11 +183,11 @@ int ftpserver_recv_cmd(int sock_ctl,char* cmd,char* arg)
 	}
 
 
-	send_response(sock_ctl,status);
+	send_response(session->sock_ctl,status);
 	return status;
 }
 
-int ftpserver_login(int sock_ctl)
+int ftpserver_login(UserSession *session)
 {
 
 	char buf[MAXSIZE];
@@ -194,7 +197,7 @@ int ftpserver_login(int sock_ctl)
 	memset(user,0,MAXSIZE);
 	memset(pass,0,MAXSIZE);
 
-	if(recv_data(sock_ctl,buf,sizeof(buf))<0)
+	if(recv_data(session->sock_ctl,buf,sizeof(buf))<0)
 	{
 		//print_log()
 		return -1;
@@ -205,12 +208,12 @@ int ftpserver_login(int sock_ctl)
 	while(buf[i]!=0)       //将用户名保存起来
 		user[j++]=buf[i++];
 
-	strcpy(UserName, user);//将用户名存入全局变量用作访问控制
+	strcpy(session->UserName, user);//将用户名存入全局变量用作访问控制
 
-	send_response(sock_ctl,331);    //通知用户输入密码
+	send_response(session->sock_ctl,331);    //通知用户输入密码
 
 	memset(buf,0,MAXSIZE);
-	if(recv_data(sock_ctl,buf,sizeof(buf))<0)  //获取密码
+	if(recv_data(session->sock_ctl,buf,sizeof(buf))<0)  //获取密码
 	{
 		//print_log()
 		return -1;
@@ -291,46 +294,47 @@ int ftpserver_start_data_conn(int sock_ctl)
 	return sock_data;
 }
 
-void ftpserver_pasv(int sock_data,int sock_ctl)
+void ftpserver_pasv(UserSession *session)
 {
-	int sock_pasv = ftpserver_start_pasv_data_conn(sock_ctl);
+	int sock_pasv = ftpserver_start_pasv_data_conn(session->sock_ctl);
 	if (sock_pasv < 0)
-	{
-		
+	{	
 		//print_log()
 		return;
 	}
 
 	struct sockaddr_in client_addr;
 	socklen_t len = sizeof(client_addr);
-	sock_data = accept(sock_pasv, (struct sockaddr*)&client_addr, &len);
-	if (sock_data < 0)
+	session->sock_data = accept(sock_pasv, (struct sockaddr*)&client_addr, &len);
+	if (session->sock_data < 0)
 	{
 		
 		close(sock_pasv);
-		//print_log()
+		printf("sock_pasv失败!\n");
 		return;
 	}
 
 	close(sock_pasv);
 }
 
-int ftpserver_list(int sock_data,int sock_ctl)
+int ftpserver_list(UserSession *session)
 {
 	char aclfile[260];
 	memset(aclfile, 0, sizeof(aclfile));
-	strcpy(aclfile, FTP_PATH);
-	strcat(aclfile, "/ctl.acl");
+	strcpy(aclfile, session->FTP_PATH);
+	strcat(aclfile, "ctl.acl");
 
 	//检查是否具有list权限
-	if(check_permissions(UserName, "LIST", aclfile) == 0)
+	/*
+	if(check_permissions(session->UserName, "LIST", aclfile) == 0)
 	{
-		send_response(sock_ctl, 550);//无权限
+		send_response(session->sock_ctl, 550);//无权限
+		printf("无权限\n");
 		return -1;
 	}
-
+*/
 	char command[256];
-	snprintf(command, sizeof(command), "ls -l %s > temp.txt", FTP_PATH);
+	snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
 	int ret = system(command);
 
 	if(ret<0)
@@ -340,65 +344,66 @@ int ftpserver_list(int sock_data,int sock_ctl)
 	}
 
 	int fd=open("temp.txt",O_RDONLY);
-	send_response(sock_ctl,1);        //准备发送数据
+	send_response(session->sock_ctl,1);        //准备发送数据
 	struct stat st;
 	stat("temp.txt",&st);
 	size_t size=st.st_size;
 
-	sendfile(sock_data,fd,NULL,size);
+	sendfile(session->sock_data,fd,NULL,size);
 	close(fd);
 
-	send_response(sock_ctl,226);        //发送应答码
+	send_response(session->sock_ctl,226);        //发送应答码
 	return 0;
 }
 
-void ftpserver_retr(int sock_data,int sock_ctl,char *filename)
+void ftpserver_retr(UserSession *session,char *filename)
 {
 	char name[260];
 	memset(name,0,sizeof(name));
-	strcpy(name,FTP_PATH);
+	strcpy(name,session->FTP_PATH);
 	strcat(name,filename);
 	int fd=open(name,O_RDONLY);
 	if(fd<0)
 	{
-		send_response(sock_ctl,550);        //发送错误码
+		send_response(session->sock_ctl,550);        //发送错误码
 	}
 	else
 	{
-		send_response(sock_ctl,150);        //发送 ok
+		send_response(session->sock_ctl,150);        //发送 ok
 		struct stat st;
 		stat(name,&st);
 		size_t size=st.st_size;
-		sendfile(sock_data,fd,NULL,size);
-		send_response(sock_ctl,226); //文件传输完成
+		sendfile(session->sock_data,fd,NULL,size);
+		send_response(session->sock_ctl,226); //文件传输完成
 		close(fd);
 	}
 }
 
-void ftpserver_push(int sock_data,int sock_ctl,char* filename)
+void ftpserver_push(UserSession *session,char* filename)
 {
 	int ack;
-	if(recv(sock_ctl,&ack,sizeof(ack),0)<0)
+	if(recv(session->sock_ctl,&ack,sizeof(ack),0)<0)
 	{
-		send_response(sock_ctl,502); //命令执行失败
+		send_response(session->sock_ctl,502); //命令执行失败
 		return;
 	}
 	
 	int status=ntohl(ack);
 	if(553==status)     //客户端上传文件失败
 	{
-		send_response(sock_ctl,553); 
+		send_response(session->sock_ctl,553); 
 		return;
 	}
 
 	char name[260];
-	memset(name,0,sizeof(name));
-	strcpy(name,"ftp/");
-	strcat(name,filename);
+	memset(name, 0, sizeof(name));
+	strcpy(name, session->FTP_PATH);
+	strcat(name, filename);
+
 	int fd=open(name,O_CREAT|O_WRONLY,0664);
 	if(fd<0)
 	{
-		send_response(sock_ctl,502); //命令执行失败
+		send_response(session->sock_ctl,502); //命令执行失败
 		return;
 	}
 	
@@ -406,13 +411,13 @@ void ftpserver_push(int sock_data,int sock_ctl,char* filename)
 	{
 		char data[MAXSIZE];
 		memset(data,0,sizeof(data));
-		ssize_t s=recv(sock_data,data,sizeof(data),0);
+		ssize_t s=recv(session->sock_data,data,sizeof(data),0);
 		if(s<=0)
 		{
 			if(s<0)
-				send_response(sock_ctl,502); //命令执行失败
+				send_response(session->sock_ctl,502); //命令执行失败
 			else
-				send_response(sock_ctl,226); //命令执行成功
+				send_response(session->sock_ctl,226); //命令执行成功
 			break;
 		}
 		write(fd,data,s);
@@ -421,44 +426,44 @@ void ftpserver_push(int sock_data,int sock_ctl,char* filename)
 }
 
 
-void ftpserver_delet(int sock_ctl, char *filename)
+void ftpserver_delet(UserSession *session, char *filename)
 {
 	char name[260];
 	memset(name, 0, sizeof(name));
-	strcpy(name, FTP_PATH);
+	strcpy(name, session->FTP_PATH);
 	strcat(name, filename);
 
 	if (remove(name) == 0) {
-		send_response(sock_ctl,250); //文件删除成功
+		send_response(session->sock_ctl,250); //文件删除成功
 	} else {
 		switch (errno) {
 			case ENOENT:
-				send_response(sock_ctl,550); //文件不存在
+				send_response(session->sock_ctl,550); //文件不存在
 				break;
 			case EACCES:
-				send_response(sock_ctl,551); //权限不足
+				send_response(session->sock_ctl,551); //权限不足
 				break;
 			case EBUSY:
-				send_response(sock_ctl,552); //文件正在被其他进程使用
+				send_response(session->sock_ctl,552); //文件正在被其他进程使用
 				break;
 			default:
-				send_response(sock_ctl,553); //其他错误
+				send_response(session->sock_ctl,553); //其他错误
 				break;
 		}
 	}
 }
 
 
-int ftpserver_remove_directory(int sock_ctl, char *path)
+int ftpserver_remove_directory(UserSession *session, char *path)
 {
     if((path == NULL) || (path[0] == '\0')) {
-        send_response(sock_ctl, 551); // 551表示请求的操作权限不足，不可以删除根目录
+        send_response(session->sock_ctl, 551); // 551表示请求的操作权限不足，不可以删除根目录
         return -1;
     }
     
     char full_path[1024];
     memset(full_path,0,sizeof(full_path));
-    strcpy(full_path,FTP_PATH);
+    strcpy(full_path,session->FTP_PATH);
     strcat(full_path,path);
 
     DIR *d = opendir(full_path);
@@ -485,27 +490,27 @@ int ftpserver_remove_directory(int sock_ctl, char *path)
             len = path_len + strlen(p->d_name) + 2; 
             buf = malloc(len);
 
-            if (buf)
-            {
-                struct stat statbuf;
-                snprintf(buf, len, "%s/%s", full_path, p->d_name);
+			if (buf)
+			{
+				struct stat statbuf;
+				snprintf(buf, len, "%s/%s", full_path, p->d_name);
 
-                if (!stat(buf, &statbuf))
-                {
-                    if (S_ISDIR(statbuf.st_mode))
-                    {
-                        char relative_path[1024];
-                        snprintf(relative_path, sizeof(relative_path), "%s/%s", path, p->d_name);
-                        r2 = ftpserver_remove_directory(sock_ctl, relative_path);
-                    }
-                    else
-                    {
-                        r2 = unlink(buf);
-                    }
-                }
+				if (!stat(buf, &statbuf))
+				{
+					if (S_ISDIR(statbuf.st_mode))
+					{
+						char relative_path[1024];
+						snprintf(relative_path, sizeof(relative_path), "%s/%s", path, p->d_name);
+						r2 = ftpserver_remove_directory(session, relative_path); // 将 ftpfilespath 传入
+					}
+					else
+					{
+						r2 = unlink(buf);
+					}
+				}
 
-                free(buf);
-            }
+				free(buf);
+			}
 
             r = r2;
         }
@@ -517,65 +522,67 @@ int ftpserver_remove_directory(int sock_ctl, char *path)
     {
         r = rmdir(full_path);
         if (r != 0) {
-            send_response(sock_ctl, 550); // 550表示请求的操作未执行，文件不可用（例如，文件未找到，未知路径）
+            send_response(session->sock_ctl, 550); // 550表示请求的操作未执行，文件不可用（例如，文件未找到，未知路径）
         } else {
-            send_response(sock_ctl, 250); // 250表示请求的文件操作正确，已完成
+            send_response(session->sock_ctl, 250); // 250表示请求的文件操作正确，已完成
         }
     }
     else {
-        send_response(sock_ctl, 550); // 550表示请求的操作未执行，文件不可用（例如，文件未找到，未知路径）
+        send_response(session->sock_ctl, 550); // 550表示请求的操作未执行，文件不可用（例如，文件未找到，未知路径）
     }
     return r;
 }
 
 
-void ftpserver_rename_directory(int sock_ctl, char *arg) {
+void ftpserver_rename_directory(UserSession *session, char *arg) 
+{
     char *oldname = strtok(arg, " ");
     char *newname = strtok(NULL, " ");
 
     if(oldname == NULL || oldname[0] == '\0' || newname == NULL || newname[0] == '\0') 
 	{
-        send_response(sock_ctl, 500); // 500 Syntax error, command unrecognized
+        send_response(session->sock_ctl, 500); // 500 Syntax error, command unrecognized
         return;
     }
 
     char full_path_old[1024];
     memset(full_path_old,0,sizeof(full_path_old));
-    strcpy(full_path_old,FTP_PATH);
+    strcpy(full_path_old,session->FTP_PATH);
     strcat(full_path_old,oldname);
 
     char full_path_new[1024];
     memset(full_path_new,0,sizeof(full_path_new));
-    strcpy(full_path_new,FTP_PATH);
+    strcpy(full_path_new,session->FTP_PATH);
     strcat(full_path_new,newname);
 
     int rename_result = rename(full_path_old, full_path_new);
     if (rename_result == 0) 
 	{
-        send_response(sock_ctl, 250); // 250 Requested file action okay, completed
+        send_response(session->sock_ctl, 250); // 250 Requested file action okay, completed
     } 
 	else 
 	{
-        send_response(sock_ctl, 550); // 550 Requested action not taken. File unavailable
+        send_response(session->sock_ctl, 550); // 550 Requested action not taken. File unavailable
     }
 }
 
-void ftpserver_make_directory(int sock_ctl,char *path){
+void ftpserver_make_directory(UserSession *session,char *path)
+{
     char dir_path[512];
-    snprintf(dir_path, sizeof(dir_path), "%s%s", FTP_PATH, path);
+    snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
     
     // Try to create the directory
     if(mkdir(dir_path, 0755) == -1) 
 	{
         // Send error code to client
         // 550 Requested action not taken. File unavailable (e.g., file not found, no access).
-        send_response(sock_ctl, 550);
+        send_response(session->sock_ctl, 550);
     } 
 	else 
 	{
         // Send success code to client
         // 257 "PATHNAME" created.
-        send_response(sock_ctl, 257);
+        send_response(session->sock_ctl, 257);
     }
 }
 

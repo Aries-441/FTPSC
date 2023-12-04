@@ -1,2 +1,2 @@
 total 0
--rwxrwxrwx 1 ljj ljj 0 Dec  3 23:27 liu111
+-rwxrwxrwx 1 ljj ljj 138 Dec  4 16:47 ctl.acl

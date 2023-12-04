@@ -79,6 +79,8 @@ int main(int argc,char* argv[])
 
 			else if(strcmp(cmd.code,"RETR")==0)  //retr命令
 			{
+
+				
 				if(read_reply(sock_ctl)==550)  //判断服务器端文件正常
 				{
 					print_reply(550);    //打印550回复
@@ -108,16 +110,21 @@ int main(int argc,char* argv[])
 				{
 					printf("recv response fail\n");
 				}
-
-				int data_sock = ftpclient_start_pasv_data_conn(sock_ctl, response);
+				printf("The response:%s\n",response);
+				sock_data = ftpclient_start_pasv_data_conn(sock_ctl, response);
 				
-				printf("response:%s\n",response);
-				//close(data_sock);
+
+				close(sock_data);
 			}
 			
 			else if(strcmp(cmd.code,"DELE")==0) //RMD删除文件夹命令
 			{
 				int reply = read_reply(sock_ctl);
+				if(reply == 200)  // Command is valid
+				{
+					reply = read_reply(sock_ctl);  // Wait for the second reply
+					printf("reply:%d\n",reply);
+				}
 				if(reply == 250) 
 				{
 					printf("Successfully deleted file %s\n", cmd.arg);
@@ -134,7 +141,7 @@ int main(int argc,char* argv[])
 				{
 					printf("The file %s is being occupied by another process\n", cmd.arg);
 				}
-				else
+				else 
 				{
 					printf("Other errors!\n");
 				}
@@ -143,6 +150,11 @@ int main(int argc,char* argv[])
 			else if(strcmp(cmd.code,"RMVD")==0) //RMD删除文件夹命令
 			{
 				int reply = read_reply(sock_ctl);
+				if(reply == 200)  // Command is valid
+				{
+					reply = read_reply(sock_ctl);  // Wait for the second reply
+					printf("reply:%d\n",reply);
+				}
 				if(reply == 250) 
 				{
 					printf("Successfully removed directory %s\n", cmd.arg);
@@ -160,6 +172,11 @@ int main(int argc,char* argv[])
 			else if(strcmp(cmd.code,"RNAM")==0) //RNAM重命名文件 or 目录
 			{
 				int reply = read_reply(sock_ctl);
+				if(reply == 200)  // Command is valid
+				{
+					reply = read_reply(sock_ctl);  // Wait for the second reply
+					printf("reply:%d\n",reply);
+				}
 				if(reply == 250) 
 				{
 					printf("250 Requested file action rename okay, completed\n");
@@ -174,26 +191,15 @@ int main(int argc,char* argv[])
 				}
 			}
 
-			else if(strcmp(cmd.code,"RNAM")==0) //RNAM重命名文件 or 目录
-			{
-				int reply = read_reply(sock_ctl);
-				if(reply == 250) 
-				{
-					printf("250 Requested file action rename okay, completed\n");
-				} 
-				else if(reply == 550) 
-				{
-					printf("550 Requested action not taken. File unavailable\n");
-				}
-				else if(reply == 500) 
-				{
-					printf("500 Syntax error, command unrecognized\n");
-				}
-			}
 
 			else if(strcmp(cmd.code,"MKND")==0) //创建新的目录或者是文件
 			{
 				int reply = read_reply(sock_ctl);
+				if(reply == 200)  // Command is valid
+				{
+					reply = read_reply(sock_ctl);  // Wait for the second reply
+					printf("reply:%d\n",reply);
+				}
 				if(reply == 257) 
 				{
 					printf("257 PATHNAME created.\n");

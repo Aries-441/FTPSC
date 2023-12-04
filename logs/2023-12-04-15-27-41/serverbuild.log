@@ -1,0 +1,63 @@
+main.c: In function ‘handler_msg’:
+main.c:11:18: error: ‘UserSession’ has no member named ‘sock’
+   11 |     close(session->sock);
+      |                  ^~
+main.c: In function ‘main’:
+main.c:35:16: error: ‘UserSession’ has no member named ‘sock’
+   35 |         session->sock = connf;
+      |                ^~
+ftpServer.c: In function ‘ftpserver_process’:
+ftpServer.c:87:5: error: too few arguments to function ‘ftpserver_make_directory’
+   87 |     ftpserver_make_directory(session);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~
+In file included from ftpServer.c:11:
+ftpServer.h:45:6: note: declared here
+   45 | void ftpserver_make_directory(UserSession *session,char *path);
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c:96:46: warning: passing argument 1 of ‘ftpserver_recv_cmd’ makes pointer from integer without a cast [-Wint-conversion]
+   96 |         int status=ftpserver_recv_cmd(session->sock_ctl, cmd, arg);
+      |                                       ~~~~~~~^~~~~~~~~~
+      |                                              |
+      |                                              int
+In file included from ftpServer.c:11:
+ftpServer.h:23:37: note: expected ‘UserSession *’ but argument is of type ‘int’
+   23 | int ftpserver_recv_cmd(UserSession *session,char* cmd,char* arg);
+      |                        ~~~~~~~~~~~~~^~~~~~~
+ftpServer.c:112:39: warning: passing argument 1 of ‘ftpserver_pasv’ makes pointer from integer without a cast [-Wint-conversion]
+  112 |                 ftpserver_pasv(session->sock_ctl);
+      |                                ~~~~~~~^~~~~~~~~~
+      |                                       |
+      |                                       int
+In file included from ftpServer.c:11:
+ftpServer.h:31:34: note: expected ‘UserSession *’ but argument is of type ‘int’
+   31 | void ftpserver_pasv(UserSession *session);
+      |                     ~~~~~~~~~~~~~^~~~~~~
+ftpServer.c: In function ‘ftpserver_check_user’:
+ftpServer.c:241:33: warning: passing argument 2 of ‘getline’ from incompatible pointer type [-Wincompatible-pointer-types]
+  241 |         while(-1!=getline(&line,&len,fd))
+      |                                 ^~~~
+      |                                 |
+      |                                 int *
+In file included from ../common/common.h:13,
+                 from ftpServer.h:4,
+                 from ftpServer.c:11:
+/usr/include/stdio.h:646:46: note: expected ‘size_t * restrict’ {aka ‘long unsigned int * restrict’} but argument is of type ‘int *’
+  646 |                           size_t *__restrict __n,
+      |                           ~~~~~~~~~~~~~~~~~~~^~~
+ftpServer.c: In function ‘ftpserver_list’:
+ftpServer.c:347:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+  347 |         sendfile(session->sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+ftpServer.c:332:51: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+  332 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |                                                   ^~
+ftpServer.c:332:9: note: ‘snprintf’ output between 18 and 1041 bytes into a destination of size 256
+  332 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_make_directory’:
+ftpServer.c:567:43: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 512 [-Wformat-truncation=]
+  567 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |                                           ^~
+ftpServer.c:567:5: note: ‘snprintf’ output 1 or more bytes (assuming 1024) into a destination of size 512
+  567 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
