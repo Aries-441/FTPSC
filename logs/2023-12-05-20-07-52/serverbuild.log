@@ -1,0 +1,4 @@
+ftpServer.c:13:10: fatal error: mysql.h: No such file or directory
+   13 | #include <mysql.h>
+      |          ^~~~~~~~~
+compilation terminated.

@@ -5,7 +5,7 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-05 16:50:39
+ * @LastEditTime: 2023-12-05 20:39:01
  */
 
 #ifndef _COMMON_H__
@@ -23,6 +23,8 @@
 #include<fcntl.h>
 #include<errno.h>
 #include <openssl/sha.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
 
 #define MAXSIZE 1024
 #define CLIENT_PORT 12345
@@ -42,5 +44,7 @@ int send_response(int sock,int code);
 void trimstr(char* str,int n);
 
 void socket_Info(int sockfd);
+
+char* base64_encode(const unsigned char* input, int length);
 
 #endif //_COMMON_H__

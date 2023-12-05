@@ -1,0 +1,58 @@
+main.c: In function ‘main’:
+main.c:49:9: error: unknown type name ‘MYSQL’
+   49 |         MYSQL* mysql_conn = mysql_init(NULL);
+      |         ^~~~~
+main.c:49:29: warning: implicit declaration of function ‘mysql_init’ [-Wimplicit-function-declaration]
+   49 |         MYSQL* mysql_conn = mysql_init(NULL);
+      |                             ^~~~~~~~~~
+main.c:49:29: warning: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast [-Wint-conversion]
+main.c:50:14: warning: implicit declaration of function ‘mysql_real_connect’ [-Wimplicit-function-declaration]
+   50 |         if (!mysql_real_connect(mysql_conn, "localhost", "root", "ljj0403!", "ftpusers", 0, NULL, 0)) {
+      |              ^~~~~~~~~~~~~~~~~~
+main.c:51:74: warning: implicit declaration of function ‘mysql_error’ [-Wimplicit-function-declaration]
+   51 |             fprintf(stderr, "Failed to connect to MySQL database: %s\n", mysql_error(mysql_conn));
+      |                                                                          ^~~~~~~~~~~
+main.c:51:68: warning: format ‘%s’ expects argument of type ‘char *’, but argument 3 has type ‘int’ [-Wformat=]
+   51 |             fprintf(stderr, "Failed to connect to MySQL database: %s\n", mysql_error(mysql_conn));
+      |                                                                   ~^     ~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                    |     |
+      |                                                                    |     int
+      |                                                                    char *
+      |                                                                   %d
+main.c:57:13: warning: implicit declaration of function ‘mysql_real_query’ [-Wimplicit-function-declaration]
+   57 |         if (mysql_real_query(mysql_conn, query, strlen(query)) != 0) {
+      |             ^~~~~~~~~~~~~~~~
+main.c:58:68: warning: format ‘%s’ expects argument of type ‘char *’, but argument 3 has type ‘int’ [-Wformat=]
+   58 |             fprintf(stderr, "Failed to insert user into database: %s\n", mysql_error(mysql_conn));
+      |                                                                   ~^     ~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                    |     |
+      |                                                                    |     int
+      |                                                                    char *
+      |                                                                   %d
+main.c:59:13: warning: implicit declaration of function ‘mysql_close’ [-Wimplicit-function-declaration]
+   59 |             mysql_close(mysql_conn);
+      |             ^~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_start_pasv_data_conn’:
+ftpServer.c:76:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+   76 |         sendfile(session->sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+ftpServer.c:61:52: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+   61 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |                                                    ^~                ~~~~~~~~
+ftpServer.c:61:9: note: ‘snprintf’ output between 19 and 1042 bytes into a destination of size 256
+   61 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_list’:
+ftpServer.c:368:51: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+  368 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |                                                   ^~
+ftpServer.c:368:9: note: ‘snprintf’ output between 18 and 1041 bytes into a destination of size 256
+  368 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_make_directory’:
+ftpServer.c:603:43: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 512 [-Wformat-truncation=]
+  603 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |                                           ^~
+ftpServer.c:603:5: note: ‘snprintf’ output 1 or more bytes (assuming 1024) into a destination of size 512
+  603 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

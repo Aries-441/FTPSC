@@ -5,12 +5,15 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-05 14:52:37
+ * @LastEditTime: 2023-12-05 20:34:57
  */
 #include "ftpServer.h"
+#include <sha.h>
 #include <pthread.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
 
 #define MAXSIZE 1024
 
@@ -41,6 +44,36 @@ int main(int argc, char* argv[])
             fprintf(stderr, "Failed to create FTP path.\n");
             return 1;
         }
+    }
+
+    // 添加处理添加用户的逻辑
+    if (argc >= 3 && strcmp(argv[1], "-adduser") == 0) {
+        char* username_password = argv[2];
+        char* username = strtok(username_password, ":");
+        char* password = strtok(NULL, ":");
+        
+        // 使用 OpenSSL 库的 SHA256 函数生成密码的哈希值
+        unsigned char hash[SHA256_DIGEST_LENGTH];
+        SHA256((unsigned char*)password, strlen(password), hash);
+        char* output = base64_encode(hash, SHA256_DIGEST_LENGTH);
+        // 将用户名和密码哈希值写入到 MySQL 数据库中
+        MYSQL* mysql_conn = mysql_init(NULL);
+        if (!mysql_real_connect(mysql_conn, "localhost", "root", "ljj0403!", "ftpusers", 0, NULL, 0)) {
+            fprintf(stderr, "Failed to connect to MySQL database: %s\n", mysql_error(mysql_conn));
+            return 1;
+        }
+
+        char query[256];
+        snprintf(query, sizeof(query), "INSERT INTO users (username, password) VALUES ('%s', '%s')", username, output);
+        if (mysql_real_query(mysql_conn, query, strlen(query)) != 0) {
+            fprintf(stderr, "Failed to insert user into database: %s\n", mysql_error(mysql_conn));
+            mysql_close(mysql_conn);
+            return 1;
+        }
+
+        mysql_close(mysql_conn);
+        printf("User added successfully.\n");
+        return 0;
     }
 
     int sock = socket_create("127.0.0.1", 21);

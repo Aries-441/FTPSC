@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/types.h>
-
+#include <mysql.h>
 
 typedef struct {
     int sock_ctl; // control socket
@@ -58,5 +58,7 @@ int check_permissions(char *UserName, char *PermissionType, char *aclFilePath);
 
 // Check if a user has a specific permission
 int user_has_permission(char *UserName, char *PermissionList);
+
+char* find_ctl_acl(const char* path);
 
 #endif  //_FTP_SERVER_H__

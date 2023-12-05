@@ -158,13 +158,29 @@ void socket_Info(int sockfd)
     }
 }
 
-int user_has_permission(char *UserName, char *PermissionList) {
-    char *token = strtok(PermissionList, ",");
-    while (token != NULL) {
-        if (strcmp(UserName, token) == 0) {
-            return 1; // User has permission
-        }
-        token = strtok(NULL, ",");
+
+char* base64_encode(const unsigned char* input, int length) {
+    BIO *bmem, *b64;
+    char *buff;
+
+    b64 = BIO_new(BIO_f_base64());
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL); // Ignore newlines - write everything in one line
+    bmem = BIO_new(BIO_s_mem());
+    b64 = BIO_push(b64, bmem);
+    BIO_write(b64, input, length);
+    BIO_flush(b64);
+
+    // Get the length of the data in the BIO
+    int mem_data_len = BIO_get_mem_data(b64, &buff);
+
+    // Allocate memory for the encoded data
+    char* encoded_data = (char*)malloc(mem_data_len + 1);
+    if (encoded_data) {
+        memcpy(encoded_data, buff, mem_data_len);
+        encoded_data[mem_data_len] = '\0'; // Null-terminate the string
     }
-    return 0; // User does not have permission
+
+    BIO_free_all(b64);
+
+    return encoded_data;
 }

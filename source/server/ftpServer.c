@@ -5,12 +5,11 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-05 20:01:26
+ * @LastEditTime: 2023-12-05 22:10:48
  */
 
-
 #include"ftpServer.h"
-#include </usr/include/mysql/mysql.h>
+#include <mysql.h>
 #define AUTH "./source/server/.auth"
 
 int ftpserver_start_pasv_data_conn(UserSession *session)
@@ -257,8 +256,6 @@ int ftpserver_login(UserSession *session)
 
 int ftpserver_check_user(const char* user,const char* pass )
 {
-    printf("ftpserver_check_user\n");
-
     MYSQL *con = mysql_init(NULL);
     if (con == NULL) {
         fprintf(stderr, "%s\n", mysql_error(con));
@@ -393,6 +390,15 @@ void ftpserver_retr(UserSession *session,char *filename)
 	memset(name,0,sizeof(name));
 	strcpy(name,session->FTP_PATH);
 	strcat(name,filename);
+
+	//检查是否具有retr权限
+	if(check_permissions(session->UserName, "RETR",	find_ctl_acl(name)) == 0)
+	{
+		send_response(session->sock_ctl, 550);//无权限
+		printf("无权限\n");
+		return -1;
+	}
+
 	int fd=open(name,O_RDONLY);
 	if(fd<0)
 	{
@@ -420,6 +426,15 @@ void ftpserver_push(UserSession *session,char* filename)
 	}
 	
 	int status=ntohl(ack);
+
+	//检查是否具有push权限
+	if(check_permissions(session->UserName, "PUSH",	session->FTP_PATH) == 0)
+	{
+		status = 553;//无权限
+		printf("无权限\n");
+		return -1;
+	}
+
 	if(553==status)     //客户端上传文件失败
 	{
 		send_response(session->sock_ctl,553); 
@@ -464,6 +479,14 @@ void ftpserver_delet(UserSession *session, char *filename)
 	strcpy(name, session->FTP_PATH);
 	strcat(name, filename);
 
+	//检查是否具有dele权限
+	if(check_permissions(session->UserName, "DELE",	find_ctl_acl(name)) == 0)
+	{
+		send_response(session->sock_ctl, 551);//无权限
+		printf("无权限\n");
+		return -1;
+	}
+
 	if (remove(name) == 0) {
 		send_response(session->sock_ctl,250); //文件删除成功
 	} else {
@@ -496,6 +519,14 @@ int ftpserver_remove_directory(UserSession *session, char *path)
     memset(full_path,0,sizeof(full_path));
     strcpy(full_path,session->FTP_PATH);
     strcat(full_path,path);
+
+	//检查是否具有remove权限
+	if(check_permissions(session->UserName, "RMVD",	find_ctl_acl(full_path)) == 0)
+	{
+		send_response(session->sock_ctl, 551);//无权限
+		printf("无权限\n");
+		return -1;
+	}
 
     DIR *d = opendir(full_path);
     size_t path_len = strlen(full_path);
@@ -586,6 +617,15 @@ void ftpserver_rename_directory(UserSession *session, char *arg)
     strcpy(full_path_new,session->FTP_PATH);
     strcat(full_path_new,newname);
 
+	//检查是否具有rename权限
+	if(check_permissions(session->UserName, "RNAM",	find_ctl_acl(full_path_new)) == 0 &&\
+		check_permissions(session->UserName, "RNAM",	find_ctl_acl(full_path_old)) == 0)
+	{
+		send_response(session->sock_ctl, 551);//无权限
+		printf("无权限\n");
+		return -1;
+	}
+
     int rename_result = rename(full_path_old, full_path_new);
     if (rename_result == 0) 
 	{
@@ -601,7 +641,15 @@ void ftpserver_make_directory(UserSession *session,char *path)
 {
     char dir_path[512];
     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
-    
+
+	//检查是否具有MKND权限
+	if(check_permissions(session->UserName, "MKND",	find_ctl_acl(dir_path)) == 0)
+	{
+		send_response(session->sock_ctl, 551);//无权限
+		printf("无权限\n");
+		return -1;
+	}
+
     // Try to create the directory
     if(mkdir(dir_path, 0755) == -1) 
 	{
@@ -651,23 +699,15 @@ int check_permissions(char *UserName, char *PermissionType, char *aclFilePath) {
 	printf("username:%s\n",UserName);
 
     while (fgets(line, sizeof(line), file)) {
-        // Remove newline character
         line[strcspn(line, "\n")] = 0;
-
         // Check if line contains permission type
         char *currentPermissionType = strtok(line, ":");
-		printf("currentPermissionType:%s\n",currentPermissionType);
-
-		printf("strcmp(PermissionType, currentPermissionType):%d\n",
-				strcmp(PermissionType, currentPermissionType));
 
         if (strcmp(PermissionType, currentPermissionType) == 0)
-        {
-			
+        {	
 			while (fgets(line, sizeof(line), file)) {
 				// Remove newline character
 				line[strcspn(line, "\n")] = 0;
-
 				// Check if the last character is ':'
 				if (line[strlen(line) - 2] == ':') 
 				{
@@ -690,5 +730,47 @@ int check_permissions(char *UserName, char *PermissionType, char *aclFilePath) {
     return 0; // User does not have permission
 }
 
+int user_has_permission(char *UserName, char *PermissionList) {
+    char *token = strtok(PermissionList, ",");
+    while (token != NULL) {
+        if (strcmp(UserName, token) == 0) {
+            return 1; // User has permission
+        }
+        token = strtok(NULL, ",");
+    }
+    return 0; // User does not have permission
+}
 
+char* find_ctl_acl(const char* path) {
+    DIR* dir = opendir(path);
+    if (dir == NULL) {
+        return NULL; // 打开目录失败
+    }
 
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue; // 跳过当前目录和父目录项
+        }
+
+        // 构造当前项的绝对路径
+        char absolutePath[PATH_MAX];
+        snprintf(absolutePath, sizeof(absolutePath), "%s/%s", path, entry->d_name);
+
+        if (entry->d_type == DT_DIR) {
+            // 递归搜索子目录
+            char* result = find_ctl_acl(absolutePath);
+            if (result != NULL) {
+                closedir(dir);
+                return result; // 在子目录中找到了 "ctl.acl" 文件
+            }
+        } else if (entry->d_type == DT_REG && strcmp(entry->d_name, "ctl.acl") == 0) {
+            // 在当前目录中找到了 "ctl.acl" 文件
+            closedir(dir);
+            return strdup(absolutePath);
+        }
+    }
+
+    closedir(dir);
+    return NULL; // 在当前目录及其子目录中未找到 "ctl.acl" 文件
+}

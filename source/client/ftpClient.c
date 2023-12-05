@@ -5,7 +5,7 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:10
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-05 15:18:00
+ * @LastEditTime: 2023-12-05 20:39:34
  */
 #include"ftpClient.h"
 #include <sys/stat.h>
@@ -298,7 +298,6 @@ int ftpclient_login(int sock_ctl)
 
 	strcpy(cmd.code,"USER");
 	strcpy(cmd.arg,user);
-	printf(">>cmd>>%s\n",cmd.arg);
 	ftpclient_send_cmd(sock_ctl,&cmd);     //发送用户名到服务器
 	
 	int wait=0;
@@ -307,9 +306,14 @@ int ftpclient_login(int sock_ctl)
 	fflush(stdout);
 	char* pass=getpass("Password: ");      //使用getpass函数获取密码
 
+	// 使用 OpenSSL 库的 SHA256 函数生成密码的哈希值
+	unsigned char hash[SHA256_DIGEST_LENGTH];
+	SHA256((unsigned char*)pass, strlen(pass), hash);
+	char* output = base64_encode(hash, SHA256_DIGEST_LENGTH);
+
 	strcpy(cmd.code,"PASS");
-	strcpy(cmd.arg,pass);
-	printf(">>cmd>>%s\n",cmd.arg);
+	strcpy(cmd.arg, output);
+
 	ftpclient_send_cmd(sock_ctl,&cmd);   //发送密码到服务器
 
 	int retcode = read_reply(sock_ctl);   //读取服务器的回应

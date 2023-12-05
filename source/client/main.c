@@ -175,6 +175,7 @@ int main(int argc,char* argv[])
 				}
 				else if(reply == 551) 
 				{
+					printf("551 Requested action aborted: Insufficient Permission\n");
 					printf("You don't have permission to delete the file %s\n", cmd.arg);
 				}
 				else if(reply == 552)
@@ -205,7 +206,7 @@ int main(int argc,char* argv[])
 				}
 				else if(reply == 551) 
 				{
-					printf("You are not allowed to remove the root directory!\n " );
+					printf("551 Requested action aborted: Insufficient Permission\n");
 				}
 			}
 
@@ -229,6 +230,10 @@ int main(int argc,char* argv[])
 				{
 					printf("500 Syntax error, command unrecognized\n");
 				}
+				else if(reply == 551) 
+				{
+					printf("551 Requested action aborted: Insufficient Permission\n");
+				}
 			}
 
 
@@ -244,6 +249,10 @@ int main(int argc,char* argv[])
 				{
 					printf("257 PATHNAME created.\n");
 				} 
+				else if(reply == 551) 
+				{
+					printf("551 Requested action aborted: Insufficient Permission\n");
+				}
 				else 
 				{
 					printf("550 Requested action not taken. File unavailable\n");

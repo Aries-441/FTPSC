@@ -1,0 +1,89 @@
+main.c: In function ‘base64_encode’:
+main.c:22:5: error: unknown type name ‘BIO’; did you mean ‘EIO’?
+   22 |     BIO* bmem = NULL;
+      |     ^~~
+      |     EIO
+main.c:23:5: error: unknown type name ‘BIO’; did you mean ‘EIO’?
+   23 |     BIO* b64 = NULL;
+      |     ^~~
+      |     EIO
+main.c:24:5: error: unknown type name ‘BUF_MEM’
+   24 |     BUF_MEM* bptr = NULL;
+      |     ^~~~~~~
+main.c:26:11: warning: implicit declaration of function ‘BIO_new’ [-Wimplicit-function-declaration]
+   26 |     b64 = BIO_new(BIO_f_base64());
+      |           ^~~~~~~
+main.c:26:19: warning: implicit declaration of function ‘BIO_f_base64’ [-Wimplicit-function-declaration]
+   26 |     b64 = BIO_new(BIO_f_base64());
+      |                   ^~~~~~~~~~~~
+main.c:26:9: warning: assignment to ‘int *’ from ‘int’ makes pointer from integer without a cast [-Wint-conversion]
+   26 |     b64 = BIO_new(BIO_f_base64());
+      |         ^
+main.c:27:20: warning: implicit declaration of function ‘BIO_s_mem’ [-Wimplicit-function-declaration]
+   27 |     bmem = BIO_new(BIO_s_mem());
+      |                    ^~~~~~~~~
+main.c:27:10: warning: assignment to ‘int *’ from ‘int’ makes pointer from integer without a cast [-Wint-conversion]
+   27 |     bmem = BIO_new(BIO_s_mem());
+      |          ^
+main.c:28:11: warning: implicit declaration of function ‘BIO_push’ [-Wimplicit-function-declaration]
+   28 |     b64 = BIO_push(b64, bmem);
+      |           ^~~~~~~~
+main.c:28:9: warning: assignment to ‘int *’ from ‘int’ makes pointer from integer without a cast [-Wint-conversion]
+   28 |     b64 = BIO_push(b64, bmem);
+      |         ^
+main.c:29:5: warning: implicit declaration of function ‘BIO_set_flags’ [-Wimplicit-function-declaration]
+   29 |     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+      |     ^~~~~~~~~~~~~
+main.c:29:24: error: ‘BIO_FLAGS_BASE64_NO_NL’ undeclared (first use in this function)
+   29 |     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+      |                        ^~~~~~~~~~~~~~~~~~~~~~
+main.c:29:24: note: each undeclared identifier is reported only once for each function it appears in
+main.c:30:5: warning: implicit declaration of function ‘BIO_write’ [-Wimplicit-function-declaration]
+   30 |     BIO_write(b64, input, length);
+      |     ^~~~~~~~~
+main.c:31:5: warning: implicit declaration of function ‘BIO_flush’; did you mean ‘net_flush’? [-Wimplicit-function-declaration]
+   31 |     BIO_flush(b64);
+      |     ^~~~~~~~~
+      |     net_flush
+main.c:32:5: warning: implicit declaration of function ‘BIO_get_mem_ptr’ [-Wimplicit-function-declaration]
+   32 |     BIO_get_mem_ptr(b64, &bptr);
+      |     ^~~~~~~~~~~~~~~
+main.c:34:38: error: request for member ‘length’ in something not a structure or union
+   34 |     char* buffer = (char*)malloc(bptr->length + 1);
+      |                                      ^~
+main.c:35:24: error: request for member ‘data’ in something not a structure or union
+   35 |     memcpy(buffer, bptr->data, bptr->length);
+      |                        ^~
+main.c:35:36: error: request for member ‘length’ in something not a structure or union
+   35 |     memcpy(buffer, bptr->data, bptr->length);
+      |                                    ^~
+main.c:36:16: error: request for member ‘length’ in something not a structure or union
+   36 |     buffer[bptr->length] = '\0';
+      |                ^~
+main.c:38:5: warning: implicit declaration of function ‘BIO_free_all’ [-Wimplicit-function-declaration]
+   38 |     BIO_free_all(b64);
+      |     ^~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_start_pasv_data_conn’:
+ftpServer.c:76:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+   76 |         sendfile(session->sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+ftpServer.c:61:52: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+   61 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |                                                    ^~                ~~~~~~~~
+ftpServer.c:61:9: note: ‘snprintf’ output between 19 and 1042 bytes into a destination of size 256
+   61 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_list’:
+ftpServer.c:368:51: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+  368 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |                                                   ^~
+ftpServer.c:368:9: note: ‘snprintf’ output between 18 and 1041 bytes into a destination of size 256
+  368 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_make_directory’:
+ftpServer.c:603:43: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 512 [-Wformat-truncation=]
+  603 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |                                           ^~
+ftpServer.c:603:5: note: ‘snprintf’ output 1 or more bytes (assuming 1024) into a destination of size 512
+  603 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
