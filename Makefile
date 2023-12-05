@@ -1,3 +1,5 @@
+all: clean subdirs
+
 SUBDIRS= ./source/client ./source/server
 
 .PHONY: subdirs $(SUBDIRS)
@@ -13,6 +15,7 @@ clean:
 		$(MAKE) -C $$dir clean; \
 	done
 
+
 rmlogs:
 	rm -rf ./logs/*
 
@@ -21,10 +24,8 @@ install:
 	find ./bin/ ! -name '*.txt' ! -name '*.md' -type f -exec rm -f {} +
 	cp ./build/* ./bin
 
-all: clean subdirs
-
 client: clean ./source/client
-	$(MAKE) -C ./source/client -lssl -lcrypto
+	$(MAKE) -C ./source/client -lssl -lcrypto -I /usr/include/mysql/
 
 server: clean ./source/server
-	$(MAKE) -C ./source/server -lssl -lcrypto
+	$(MAKE) -C ./source/server -lssl -lcrypto -I /usr/include/mysql/

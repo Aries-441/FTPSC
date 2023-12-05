@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include </usr/include/mysql/mysql.h>
+
 
 typedef struct {
     int sock_ctl; // control socket

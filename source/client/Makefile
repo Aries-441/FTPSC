@@ -7,7 +7,7 @@ OUTFILE=$(BUILDDIR)/ClientFTP
 LOGFILE=$(LOGDIR)/clientbuild.log
 
 $(OUTFILE):$(SRC) | $(BUILDDIR) $(LOGDIR)
-	$(CC) -o $@ $^ 2>&1 | tee $(LOGFILE)
+	$(CC) -o $@ $^ -lmysqlclient 2>&1 | tee $(LOGFILE)
 	cp $@ $(LOGDIR)/
 
 $(BUILDDIR) $(LOGDIR):

@@ -8,8 +8,9 @@ OUTFILE=$(BUILDDIR)/ServerFTP
 LOGFILE=$(LOGDIR)/serverbuild.log
 
 $(OUTFILE):$(SRC) | $(BUILDDIR) $(LOGDIR)
-	$(CC) -o $@ $^ 2>&1 | tee $(LOGFILE)
+	$(CC) -o $@ $^ -lmysqlclient 2>&1 | tee $(LOGFILE)
 	cp $@ $(LOGDIR)/
+
 
 $(BUILDDIR) $(LOGDIR):
 	mkdir -p $@

@@ -1,0 +1,40 @@
+ftpServer.c: In function ‘ftpserver_start_pasv_data_conn’:
+ftpServer.c:76:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+   76 |         sendfile(session->sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+ftpServer.c:61:52: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+   61 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |                                                    ^~                ~~~~~~~~
+ftpServer.c:61:9: note: ‘snprintf’ output between 19 and 1042 bytes into a destination of size 256
+   61 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_list’:
+ftpServer.c:368:51: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+  368 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |                                                   ^~
+ftpServer.c:368:9: note: ‘snprintf’ output between 18 and 1041 bytes into a destination of size 256
+  368 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_make_directory’:
+ftpServer.c:603:43: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 512 [-Wformat-truncation=]
+  603 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |                                           ^~
+ftpServer.c:603:5: note: ‘snprintf’ output 1 or more bytes (assuming 1024) into a destination of size 512
+  603 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/bin/ld: /tmp/ccFgTbqQ.o: in function `ftpserver_check_user':
+ftpServer.c:(.text+0xc06): undefined reference to `mysql_init'
+/usr/bin/ld: ftpServer.c:(.text+0xc26): undefined reference to `mysql_error'
+/usr/bin/ld: ftpServer.c:(.text+0xc89): undefined reference to `mysql_real_connect'
+/usr/bin/ld: ftpServer.c:(.text+0xca1): undefined reference to `mysql_error'
+/usr/bin/ld: ftpServer.c:(.text+0xcd1): undefined reference to `mysql_close'
+/usr/bin/ld: ftpServer.c:(.text+0xd1e): undefined reference to `mysql_query'
+/usr/bin/ld: ftpServer.c:(.text+0xd31): undefined reference to `mysql_error'
+/usr/bin/ld: ftpServer.c:(.text+0xd61): undefined reference to `mysql_close'
+/usr/bin/ld: ftpServer.c:(.text+0xd7a): undefined reference to `mysql_store_result'
+/usr/bin/ld: ftpServer.c:(.text+0xd9a): undefined reference to `mysql_error'
+/usr/bin/ld: ftpServer.c:(.text+0xdca): undefined reference to `mysql_close'
+/usr/bin/ld: ftpServer.c:(.text+0xde0): undefined reference to `mysql_fetch_row'
+/usr/bin/ld: ftpServer.c:(.text+0xe34): undefined reference to `mysql_free_result'
+/usr/bin/ld: ftpServer.c:(.text+0xe43): undefined reference to `mysql_close'
+collect2: error: ld returned 1 exit status

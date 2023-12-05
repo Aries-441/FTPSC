@@ -5,12 +5,12 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-05 15:58:48
+ * @LastEditTime: 2023-12-05 20:01:26
  */
 
 
 #include"ftpServer.h"
-
+#include </usr/include/mysql/mysql.h>
 #define AUTH "./source/server/.auth"
 
 int ftpserver_start_pasv_data_conn(UserSession *session)
@@ -257,48 +257,48 @@ int ftpserver_login(UserSession *session)
 
 int ftpserver_check_user(const char* user,const char* pass )
 {
-	printf("ftpserver_check_user\n");
-	FILE* fd=fopen(AUTH,"r");
-	if(NULL==fd)
-	{
-		printf("AUTH file failed!\n");
-		return -1;
-	}
+    printf("ftpserver_check_user\n");
 
-	char username[MAXSIZE];
-	char password[MAXSIZE];
-	char buf[MAXSIZE];
-	char* line=NULL;
-	int len=0;
-	int auth=-1;
-	while(-1!=getline(&line,&len,fd))
-	{
-		memset(buf,0,MAXSIZE);
-		strcpy(buf,line);          
-		
-		char *post=strtok(buf," ");    //分割出用户名 
-		printf(">>post>>%s,\n",post);
-		strcpy(username,post);
+    MYSQL *con = mysql_init(NULL);
+    if (con == NULL) {
+        fprintf(stderr, "%s\n", mysql_error(con));
+        return -1;
+    }
 
-		if(NULL!=post)
-		{
-			char *post=strtok(NULL," ");     //分割出密码
-			printf(">>post>>%s,\n",post);
-			strcpy(password,post);
-		}
+    if (mysql_real_connect(con, "localhost", "root", "ljj0403!", "ftpusers", 0, NULL, 0) == NULL) {
+        fprintf(stderr, "%s\n", mysql_error(con));
+        mysql_close(con);
+        return -1;
+    }
 
-		trimstr(password,(int)strlen(password)); //去掉字符串中放入空格和换行
-	
-		if((strcmp(user,username)==0)&&(strcmp(pass,password)==0))
-		{
-			auth=1;
-			break;
-		}
-	}
+    char query[256];
+    snprintf(query, sizeof(query), "SELECT password FROM users WHERE username = '%s'", user);
 
-	free(line);
-	fclose(fd);
-	return 1;
+    if (mysql_query(con, query)) {
+        fprintf(stderr, "%s\n", mysql_error(con));
+        mysql_close(con);
+        return -1;
+    }
+
+    MYSQL_RES *result = mysql_store_result(con);
+    if (result == NULL) {
+        fprintf(stderr, "%s\n", mysql_error(con));
+        mysql_close(con);
+        return -1;
+    }
+
+    MYSQL_ROW row = mysql_fetch_row(result);
+    int auth = -1;
+    if (row != NULL) {
+        if (strcmp(pass, row[0]) == 0) {
+            auth = 1;
+        }
+    }
+
+    mysql_free_result(result);
+    mysql_close(con);
+
+    return auth;
 }
 
 int ftpserver_start_data_conn(int sock_ctl)
