@@ -5,7 +5,7 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-05 22:10:48
+ * @LastEditTime: 2023-12-05 23:31:38
  */
 
 #include"ftpServer.h"
@@ -113,14 +113,33 @@ void ftpserver_process(UserSession *session)
             
         if(200==status)     //处理
         {
-			if(session->pasv_flag == 0) {
-				session->sock_data=ftpserver_start_data_conn(session->sock_ctl);
+			printf("合法指令\n");
+
+			session->sock_data=ftpserver_start_data_conn(session->sock_ctl);
+			int flag = session->pasv_flag;
+			if ((strcmp(cmd,"PASV")==0 && (session->pasv_flag  == 0)) || (session->pasv_flag  == 1))
+			{
+				ftpserver_pasv(session);
+
+				if(flag == 0)
+				{
+					session->pasv_flag = 1;
+					printf("第一次pasv\n");
+					if(session->sock_data >= 0) {
+						close(session->sock_data);
+						session->sock_data = -1;
+					}
+					continue;
+				}	
+
 			}
-			else {
-				session->sock_data = dup(session->sock_data_pasv);
+			else
+			{
+				printf("strcmp:%d\n",strcmp(cmd,"PASV"));
+				printf("pasv_flag:%d\n",session->pasv_flag);
 			}
             	
-				
+			printf("sock_info:\n");
 			socket_Info(session->sock_data);
 
             if(session->sock_data<0)
@@ -205,7 +224,6 @@ int ftpserver_recv_cmd(UserSession *session,char* cmd,char* arg)
 		status=502;
 		//弹出提示窗口，指导用法
 	}
-
 
 	send_response(session->sock_ctl,status);
 	return status;
@@ -334,10 +352,9 @@ void ftpserver_pasv(UserSession *session)
 
 	struct sockaddr_in client_addr;
 	socklen_t len = sizeof(client_addr);
-	session->sock_data_pasv = accept(sock_pasv, (struct sockaddr*)&client_addr, &len);
+	session->sock_data = accept(sock_pasv, (struct sockaddr*)&client_addr, &len);
 	if (session->sock_data < 0)
-	{
-		
+	{		
 		close(sock_pasv);
 		printf("sock_pasv失败!\n");
 		return;

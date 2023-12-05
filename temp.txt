@@ -1,5 +1,5 @@
 total 0
--rwxrwxrwx 1 ljj ljj   77 Dec  5 21:56 ctl.acl
+-rwxrwxrwx 1 ljj ljj   77 Dec  5 23:32 ctl.acl
 drwxrwxrwx 1 ljj ljj 4096 Dec  4 23:11 test1
 drwxrwxrwx 1 ljj ljj 4096 Dec  4 23:11 test2
 drwxrwxrwx 1 ljj ljj 4096 Dec  4 23:11 test3
