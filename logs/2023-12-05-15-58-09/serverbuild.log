@@ -1,0 +1,9 @@
+ftpServer.c: In function ‘ftpserver_start_pasv_data_conn’:
+ftpServer.c:76:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+   76 |         sendfile(session->sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+ftpServer.c: At top level:
+ftpServer.c:258:10: fatal error: mysql.h: No such file or directory
+  258 | #include <mysql.h>
+      |          ^~~~~~~~~
+compilation terminated.

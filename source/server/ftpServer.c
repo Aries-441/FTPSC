@@ -5,14 +5,15 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-04 20:19:51
+ * @LastEditTime: 2023-12-05 15:58:48
  */
 
 
 #include"ftpServer.h"
-#define AUTH ".auth"
 
-int ftpserver_start_pasv_data_conn(int sock_ctl)
+#define AUTH "./source/server/.auth"
+
+int ftpserver_start_pasv_data_conn(UserSession *session)
 {
     int sock_pasv = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_pasv < 0)
@@ -52,15 +53,30 @@ int ftpserver_start_pasv_data_conn(int sock_ctl)
 	char response[MAXSIZE];
 	int h1, h2, h3, h4;
 	sscanf(inet_ntoa(server_addr.sin_addr), "%d.%d.%d.%d", &h1, &h2, &h3, &h4);
-	sprintf(response, "227 Entering Passive Mode (127,0,0,1,%d,%d)",
+	sprintf(response, "(127,0,0,1,%d,%d)",
 			ntohs(server_addr.sin_port) / 256,
 			ntohs(server_addr.sin_port) % 256);
 
-	int bytes_sent = send(sock_ctl, response, strlen(response), 0);
-	if (bytes_sent < strlen(response)) {
-		perror("send");
-		printf("send fail");
+	char command[256];
+	snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+	int ret = system(command);
+
+	if(ret<0)
+	{
+		//print_log
+		return -1;
 	}
+
+	int fd=open("temp.txt",O_RDONLY);
+	send_response(session->sock_ctl,1);        //准备发送数据
+	struct stat st;
+	stat("temp.txt",&st);
+	size_t size=st.st_size;
+
+	sendfile(session->sock_data,fd,NULL,size);
+	close(fd);
+
+	send_response(session->sock_ctl,226);        //发送应答码
 
 	printf("Server response: %s\n", response);
 
@@ -71,7 +87,7 @@ void ftpserver_process(UserSession *session)
 {
     send_response(session->sock_ctl,220);   //发送接受处理响应码
 
-    if(1==ftpserver_login(session) || 1)    //登录成功
+    if(1==ftpserver_login(session) || 0)    //登录成功
     {
         send_response(session->sock_ctl,230);  
     }
@@ -85,6 +101,7 @@ void ftpserver_process(UserSession *session)
     ftpserver_make_directory(session,session->UserName);
     strcat(session->FTP_PATH, session->UserName);
     strcat(session->FTP_PATH, "/");
+	create_acl_file(session->UserName, session->FTP_PATH);
 
     char cmd[5];
     char arg[MAXSIZE];
@@ -97,7 +114,15 @@ void ftpserver_process(UserSession *session)
             
         if(200==status)     //处理
         {
-            session->sock_data=ftpserver_start_data_conn(session->sock_ctl);
+			if(session->pasv_flag == 0) {
+				session->sock_data=ftpserver_start_data_conn(session->sock_ctl);
+			}
+			else {
+				session->sock_data = dup(session->sock_data_pasv);
+			}
+            	
+				
+			socket_Info(session->sock_data);
 
             if(session->sock_data<0)
             {
@@ -223,16 +248,20 @@ int ftpserver_login(UserSession *session)
 	j=0;
 	while(buf[i]!=0)       //将密码保存起来
 		pass[j++]=buf[i++];
+	printf(">>cmd>>%s,%s\n",user,pass);
+
 	int ret=ftpserver_check_user(user,pass);    //验证用户名和密码
+
 	return ret;
 }
 
 int ftpserver_check_user(const char* user,const char* pass )
 {
+	printf("ftpserver_check_user\n");
 	FILE* fd=fopen(AUTH,"r");
 	if(NULL==fd)
 	{
-		//print_log()
+		printf("AUTH file failed!\n");
 		return -1;
 	}
 
@@ -248,11 +277,13 @@ int ftpserver_check_user(const char* user,const char* pass )
 		strcpy(buf,line);          
 		
 		char *post=strtok(buf," ");    //分割出用户名 
+		printf(">>post>>%s,\n",post);
 		strcpy(username,post);
 
 		if(NULL!=post)
 		{
 			char *post=strtok(NULL," ");     //分割出密码
+			printf(">>post>>%s,\n",post);
 			strcpy(password,post);
 		}
 
@@ -296,7 +327,8 @@ int ftpserver_start_data_conn(int sock_ctl)
 
 void ftpserver_pasv(UserSession *session)
 {
-	int sock_pasv = ftpserver_start_pasv_data_conn(session->sock_ctl);
+	session->pasv_flag = 1;
+	int sock_pasv = ftpserver_start_pasv_data_conn(session);
 	if (sock_pasv < 0)
 	{	
 		//print_log()
@@ -305,7 +337,7 @@ void ftpserver_pasv(UserSession *session)
 
 	struct sockaddr_in client_addr;
 	socklen_t len = sizeof(client_addr);
-	session->sock_data = accept(sock_pasv, (struct sockaddr*)&client_addr, &len);
+	session->sock_data_pasv = accept(sock_pasv, (struct sockaddr*)&client_addr, &len);
 	if (session->sock_data < 0)
 	{
 		
@@ -325,14 +357,13 @@ int ftpserver_list(UserSession *session)
 	strcat(aclfile, "ctl.acl");
 
 	//检查是否具有list权限
-	/*
 	if(check_permissions(session->UserName, "LIST", aclfile) == 0)
 	{
 		send_response(session->sock_ctl, 550);//无权限
 		printf("无权限\n");
 		return -1;
 	}
-*/
+
 	char command[256];
 	snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
 	int ret = system(command);
@@ -586,6 +617,78 @@ void ftpserver_make_directory(UserSession *session,char *path)
     }
 }
 
+void create_acl_file(char *UserName, char *path) {
+    // 创建完整文件路径
+    char filepath[MAXSIZE];
+    snprintf(filepath, sizeof(filepath), "%s/ctl.acl", path);
+
+    // 打开文件
+    FILE *file = fopen(filepath, "w");
+    if (file == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    // 写入内容
+    const char *commands[] = {"LIST", "RETR", "PUSH", "DELE", "RMVD", "MKND", "RNAM"};
+    size_t num_commands = sizeof(commands) / sizeof(commands[0]);
+    for (size_t i = 0; i < num_commands; i++) {
+        fprintf(file, "%s:\n%s,\n", commands[i], UserName);
+    }
+
+    // 关闭文件
+    fclose(file);
+}
+
+int check_permissions(char *UserName, char *PermissionType, char *aclFilePath) {
+    FILE *file = fopen(aclFilePath, "r");
+    if (file == NULL) {
+        printf("Could not open file %s\n", aclFilePath);
+        return 0; // Could not open file
+    }
+
+    char line[MAXSIZE];
+	printf("username:%s\n",UserName);
+
+    while (fgets(line, sizeof(line), file)) {
+        // Remove newline character
+        line[strcspn(line, "\n")] = 0;
+
+        // Check if line contains permission type
+        char *currentPermissionType = strtok(line, ":");
+		printf("currentPermissionType:%s\n",currentPermissionType);
+
+		printf("strcmp(PermissionType, currentPermissionType):%d\n",
+				strcmp(PermissionType, currentPermissionType));
+
+        if (strcmp(PermissionType, currentPermissionType) == 0)
+        {
+			
+			while (fgets(line, sizeof(line), file)) {
+				// Remove newline character
+				line[strcspn(line, "\n")] = 0;
+
+				// Check if the last character is ':'
+				if (line[strlen(line) - 2] == ':') 
+				{
+					break;
+				}
+				char *permissionList = strtok(line, "\n,");
+				printf("permissionList:%s\n",permissionList);
+				if(user_has_permission(UserName, permissionList))
+				{
+					fclose(file);
+					return 1;
+				}
+				
+			}
+			return 0;
+        }
+    }
+
+    fclose(file);
+    return 0; // User does not have permission
+}
 
 
 

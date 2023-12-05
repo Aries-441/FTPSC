@@ -1,0 +1,10 @@
+In file included from main.c:10:
+ftpServer.h:13:10: fatal error: mysql.h: No such file or directory
+   13 | #include <mysql.h>
+      |          ^~~~~~~~~
+compilation terminated.
+In file included from ftpServer.c:12:
+ftpServer.h:13:10: fatal error: mysql.h: No such file or directory
+   13 | #include <mysql.h>
+      |          ^~~~~~~~~
+compilation terminated.

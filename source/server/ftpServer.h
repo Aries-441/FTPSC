@@ -10,12 +10,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include </usr/include/mysql/mysql.h>
 
 typedef struct {
     int sock_ctl; // control socket
     int sock_data; // data socket
     char UserName[MAXSIZE];
     char FTP_PATH[MAXSIZE];
+    int pasv_flag;
+    int sock_data_pasv;
+
 } UserSession;
 
 void ftpserver_process(UserSession *session);
@@ -28,7 +32,7 @@ int ftpserver_check_user(const char* user,const char* pass);
 
 int ftpserver_start_data_conn(int sock_ctl);
 
-int ftpserver_start_pasv_data_conn(int sock_ctl);
+int ftpserver_start_pasv_data_conn(UserSession *session);
 
 void ftpserver_pasv(UserSession *session);
 
@@ -45,5 +49,14 @@ void ftpserver_rename_directory(UserSession *session,char *path);
 int ftpserver_remove_directory(UserSession *session,char *path);
 
 void ftpserver_make_directory(UserSession *session,char *path);
+
+// for a new user create an ACL file
+void create_acl_file(char *UserName, char *path);
+
+// Check permissions for a user in an ACL file
+int check_permissions(char *UserName, char *PermissionType, char *aclFilePath);
+
+// Check if a user has a specific permission
+int user_has_permission(char *UserName, char *PermissionList);
 
 #endif  //_FTP_SERVER_H__

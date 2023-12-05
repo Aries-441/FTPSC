@@ -1,0 +1,32 @@
+main.c: In function ‘main’:
+main.c:71:33: error: expected expression before ‘int’
+   71 |                                 int sock_data = ftpclient_open_conn(sock_ctl);   //创建一个数据连接
+      |                                 ^~~
+main.c:73:33: error: expected ‘(’ before ‘int’
+   73 |                                 int sock_data = sock_data_pasv;
+      |                                 ^~~
+      |                                 (
+main.c:75:28: error: ‘sock_data’ undeclared (first use in this function); did you mean ‘sock_ctl’?
+   75 |                         if(sock_data<0)
+      |                            ^~~~~~~~~
+      |                            sock_ctl
+main.c:75:28: note: each undeclared identifier is reported only once for each function it appears in
+ftpClient.c: In function ‘ftpclient_read_cmd’:
+ftpClient.c:60:9: warning: implicit declaration of function ‘read_input’; did you mean ‘readlinkat’? [-Wimplicit-function-declaration]
+   60 |         read_input(buf,size);
+      |         ^~~~~~~~~~
+      |         readlinkat
+ftpClient.c: In function ‘ftpclient_list’:
+ftpClient.c:179:33: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘ssize_t’ {aka ‘long int’} [-Wformat=]
+  179 |                 printf("list s:%d\n",s);
+      |                                ~^    ~
+      |                                 |    |
+      |                                 int  ssize_t {aka long int}
+      |                                %ld
+ftpClient.c: In function ‘ftpclient_pasv’:
+ftpClient.c:209:25: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘ssize_t’ {aka ‘long int’} [-Wformat=]
+  209 |         printf("list s:%d\n",s);
+      |                        ~^    ~
+      |                         |    |
+      |                         int  ssize_t {aka long int}
+      |                        %ld

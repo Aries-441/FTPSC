@@ -1,0 +1,19 @@
+ftpClient.c: In function ‘ftpclient_read_cmd’:
+ftpClient.c:60:9: warning: implicit declaration of function ‘read_input’; did you mean ‘readlinkat’? [-Wimplicit-function-declaration]
+   60 |         read_input(buf,size);
+      |         ^~~~~~~~~~
+      |         readlinkat
+ftpClient.c: In function ‘ftpclient_list’:
+ftpClient.c:179:33: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘ssize_t’ {aka ‘long int’} [-Wformat=]
+  179 |                 printf("list s:%d\n",s);
+      |                                ~^    ~
+      |                                 |    |
+      |                                 int  ssize_t {aka long int}
+      |                                %ld
+ftpClient.c: In function ‘ftpclient_pasv’:
+ftpClient.c:209:25: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘ssize_t’ {aka ‘long int’} [-Wformat=]
+  209 |         printf("list s:%d\n",s);
+      |                        ~^    ~
+      |                         |    |
+      |                         int  ssize_t {aka long int}
+      |                        %ld

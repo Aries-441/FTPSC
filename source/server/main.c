@@ -1,9 +1,20 @@
-#include"ftpServer.h"
-#include<pthread.h>
+/*
+ * @FileName: 
+ * @Description: 
+ * @Autor: Liujunjie/Aries-441
+ * @StudentNumber: 521021911059
+ * @Date: 2023-11-30 21:37:02
+ * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
+ * @LastEditTime: 2023-12-05 14:52:37
+ */
+#include "ftpServer.h"
+#include <pthread.h>
+#include <string.h>
+#include <sys/stat.h>
 
 #define MAXSIZE 1024
 
-void* handler_msg(void *arg)
+void* handler_msg(void* arg)
 {
     pthread_detach(pthread_self());
     UserSession* session = (UserSession*)arg;
@@ -13,15 +24,30 @@ void* handler_msg(void *arg)
     return NULL;
 }
 
-int main(int argc,char* argv[])
+int main(int argc, char* argv[])
 {
-    int sock=socket_create("127.0.0.1",21);
-    
-    while(1)
-    {
-        int connf=socket_accept(sock);
-        if(connf<0)
-        {
+    char ftpPath[MAXSIZE];
+    strcpy(ftpPath, "./source/server/ftp/"); // 默认路径
+
+    // 检查命令行参数
+    if (argc >= 3 && strcmp(argv[1], "-ftppath") == 0) {
+        strcpy(ftpPath, argv[2]);
+    }
+
+    // 检查路径是否存在，不存在则创建
+    struct stat st;
+    if (stat(ftpPath, &st) == -1) {
+        if (mkdir(ftpPath, 0700) == -1) {
+            fprintf(stderr, "Failed to create FTP path.\n");
+            return 1;
+        }
+    }
+
+    int sock = socket_create("127.0.0.1", 21);
+
+    while (1) {
+        int connf = socket_accept(sock);
+        if (connf < 0) {
             continue;
         }
 
@@ -33,10 +59,11 @@ int main(int argc,char* argv[])
             continue;
         }
         session->sock_ctl = connf;
-        strcpy(session->FTP_PATH, "./source/server/ftp/");
+        session->pasv_flag = 0;
+        strcpy(session->FTP_PATH, ftpPath);
 
         pthread_t tid;
-        pthread_create(&tid,NULL,handler_msg,session);
+        pthread_create(&tid, NULL, handler_msg, session);
     }
     close(sock);
     return 0;

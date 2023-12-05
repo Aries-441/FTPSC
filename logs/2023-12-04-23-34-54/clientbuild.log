@@ -1,0 +1,8 @@
+ftpClient.c:15:1: error: expected identifier or ‘(’ before ‘if’
+   15 | if (setsockopt(sock_ctl, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+      | ^~
+ftpClient.c: In function ‘ftpclient_read_cmd’:
+ftpClient.c:65:9: warning: implicit declaration of function ‘read_input’; did you mean ‘readlinkat’? [-Wimplicit-function-declaration]
+   65 |         read_input(buf,size);
+      |         ^~~~~~~~~~
+      |         readlinkat

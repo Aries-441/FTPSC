@@ -1,4 +1,5 @@
 #include"ftpClient.h"
+#include"../common/common.h"
 
 void Usage(const char *filename)
 {
@@ -13,7 +14,10 @@ int main(int argc,char* argv[])
 		return -1;
 	}
 	
-	
+	int pasv_flag = 0; //是否使用过pasv指令
+	int sock_data_pasv = 0;
+	int sock_data;  // 声明数据连接套接字变量
+
 	int sock_ctl=socket_connect(argv[1],21);//默认使用21端口
 	if(sock_ctl<0)
 	{
@@ -62,9 +66,19 @@ int main(int argc,char* argv[])
 
 		else        //status is 200
 		{
-			//printf("status 200");
+			printf("status 200\n");
 
-			int sock_data=ftpclient_open_conn(sock_ctl);   //创建一个数据连接
+
+
+			if (pasv_flag == 0) {
+				sock_data = ftpclient_open_conn(sock_ctl);  // 创建一个数据连接
+			} else {
+				printf("sock_data_pasv:%d\n",sock_data_pasv);
+				socket_Info(sock_data_pasv);
+				printf("\n");
+				sock_data = dup(sock_data_pasv);
+			}
+
 			if(sock_data<0)
 			{
 				perror("Error open data connect failed\n");
@@ -73,14 +87,34 @@ int main(int argc,char* argv[])
 			
 			if(strcmp(cmd.code,"LIST")==0)      //list命令
 			{
+				printf("sock_data:%d\n",sock_data);
+				socket_Info(sock_data);
 				ftpclient_list(sock_ctl,sock_data);
+
+				int reply = read_reply(sock_ctl);
+
+				if(reply == 200)  // Command is valid
+				{
+					if(read_reply(sock_ctl)==550)  //判断服务器端文件正常
+					{
+						print_reply(550);    //打印550回复
+						close(sock_data);
+						continue;
+					}
+				}
+
+				if(reply == 550)  //判断服务器端文件正常
+				{
+					print_reply(550);    //打印550回复
+					close(sock_data);
+					continue;
+				}
 				close(sock_data);      
 			}
 
 			else if(strcmp(cmd.code,"RETR")==0)  //retr命令
 			{
-
-				
+			
 				if(read_reply(sock_ctl)==550)  //判断服务器端文件正常
 				{
 					print_reply(550);    //打印550回复
@@ -97,24 +131,30 @@ int main(int argc,char* argv[])
 					send_response(sock_ctl,553);
 				else									  //告诉服务器文件已经上传
 					send_response(sock_ctl,200);
+
 				close(sock_data);      
 				print_reply(read_reply(sock_ctl));    //打印服务器端的响应
 			}
 
-			else if(strcmp(cmd.code,"PASV")==0) //PASV命令
-			{				
+			else if(strcmp(cmd.code,"PASV")==0)
+			{
+				pasv_flag = 1;
 				char response[MAXSIZE];
-				memset(response,0,sizeof(response));	
+				memset(response,0,1024);
 
-				if (recv(sock_ctl, response, sizeof(response), 0) < 0)
-				{
-					printf("recv response fail\n");
+				ftpclient_pasv(sock_ctl,sock_data,response);
+
+				int data_sock = ftpclient_start_pasv_data_conn(response);
+				printf("data_sock:%d\n",data_sock);
+				socket_Info(data_sock);
+				printf("sock_data:%d\n",sock_data);
+				socket_Info(sock_data);
+
+				if(data_sock > 0){
+					sock_data_pasv = dup(data_sock);
+					close(data_sock);
 				}
-				printf("The response:%s\n",response);
-				sock_data = ftpclient_start_pasv_data_conn(sock_ctl, response);
-				
-
-				close(sock_data);
+					
 			}
 			
 			else if(strcmp(cmd.code,"DELE")==0) //RMD删除文件夹命令
@@ -208,10 +248,11 @@ int main(int argc,char* argv[])
 				{
 					printf("550 Requested action not taken. File unavailable\n");
 				}
-
 			}
-
 		}
+
+		if(sock_data > 0)
+			close(sock_data);
 	}
 	close(sock_ctl);
 	return 0;

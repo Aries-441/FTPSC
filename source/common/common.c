@@ -1,4 +1,16 @@
+/*
+ * @FileName: 
+ * @Description: 
+ * @Autor: Liujunjie/Aries-441
+ * @StudentNumber: 521021911059
+ * @Date: 2023-11-30 21:37:02
+ * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
+ * @LastEditTime: 2023-12-05 14:26:38
+ */
 #include"common.h"
+
+struct timeval timeout = {5, 1000};  // 3秒和10微秒
+
 
 int socket_create(const char* ip,const int port)  //创建一个监听套接字
 {
@@ -121,6 +133,31 @@ void trimstr(char* str,int n)   //去除字符串中的空白和换行
 	}
 }
 
+// 打印套接字连接的本地地址和远程地址
+void socket_Info(int sockfd) 
+{
+    struct sockaddr_in local_addr, peer_addr;
+    socklen_t addr_len = sizeof(struct sockaddr_in);
+
+    // 获取本地地址
+    if (getsockname(sockfd, (struct sockaddr*)&local_addr, &addr_len) == 0) 
+	{
+        char local_ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(local_addr.sin_addr), local_ip, INET_ADDRSTRLEN);
+        int local_port = ntohs(local_addr.sin_port);
+        printf("Local address: %s:%d\n", local_ip, local_port);
+    }
+
+    // 获取远程地址
+    if (getpeername(sockfd, (struct sockaddr*)&peer_addr, &addr_len) == 0) 
+	{
+        char peer_ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(peer_addr.sin_addr), peer_ip, INET_ADDRSTRLEN);
+        int peer_port = ntohs(peer_addr.sin_port);
+        printf("Remote address: %s:%d\n", peer_ip, peer_port);
+    }
+}
+
 int user_has_permission(char *UserName, char *PermissionList) {
     char *token = strtok(PermissionList, ",");
     while (token != NULL) {
@@ -131,39 +168,3 @@ int user_has_permission(char *UserName, char *PermissionList) {
     }
     return 0; // User does not have permission
 }
-
-int check_permissions(char *UserName, char *PermissionType, char *aclFilePath) {
-    FILE *file = fopen(aclFilePath, "r");
-    if (file == NULL) {
-        printf("Could not open file %s\n", aclFilePath);
-        return 0; // Could not open file
-    }
-
-    char line[MAXSIZE];
-    while (fgets(line, sizeof(line), file)) {
-        // Remove newline character
-        line[strcspn(line, "\n")] = 0;
-
-        // Check if line contains permission type
-        char *currentPermissionType = strtok(line, ":");
-        char *permissionList = strtok(NULL, ":");
-
-        if (strcmp(PermissionType, currentPermissionType) == 0 &&
-            user_has_permission(UserName, permissionList)) {
-            fclose(file);
-            return 1; // User has permission
-        }
-    }
-
-    fclose(file);
-    return 0; // User does not have permission
-}
-
-
-
-
-
-
-
-
-

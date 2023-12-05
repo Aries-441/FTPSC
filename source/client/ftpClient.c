@@ -5,14 +5,16 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:10
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-04 18:00:52
+ * @LastEditTime: 2023-12-05 15:18:00
  */
 #include"ftpClient.h"
 #include <sys/stat.h>
 #include <sys/sendfile.h>
+#include <unistd.h>
 
 int read_reply(int sock_ctl)       //读取服务器的回复
 {
+
 	int status=0;
 	if(recv(sock_ctl,&status,sizeof(status),0)<0)
 	{
@@ -95,8 +97,10 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 	{	
 		strcat(buf," ");
 		strncat(buf,cmd->arg,strlen(cmd->arg));
-	}
+	}	
+	//打印buf
 	printf("buf:%s\n",buf);
+
 	return 0;
 }
 
@@ -155,10 +159,16 @@ int ftpclient_open_conn(int sock_ctl)   //打开数据连接
 
 int ftpclient_list(int sock_ctl,int sock_data) //处理list命令
 {
+	if (setsockopt(sock_ctl, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) 
+	{
+		perror("Error setting socket options");
+		return -1;
+	}
 	int tmp=0;
+	
 	if(recv(sock_ctl,&tmp,sizeof(tmp),0)<0)    //等待服务器连接成功发送过来一个信号
 	{
-		perror("client:error reading message from server.\n");
+		perror("client: action list error reading message from server.\n");
 		return -1;
 	}
 
@@ -167,6 +177,7 @@ int ftpclient_list(int sock_ctl,int sock_data) //处理list命令
 		char buf[MAXSIZE];
 		memset(buf,0,sizeof(buf));
 		ssize_t s=recv(sock_data,buf,MAXSIZE,0);
+		printf("list s:%d\n",s);
 		if(s<=0)
 		{
 			if(s<0)
@@ -176,12 +187,29 @@ int ftpclient_list(int sock_ctl,int sock_data) //处理list命令
 		printf("%s",buf);
 	}
 
-	//等待服务器发送完成的信号
-	if(recv(sock_ctl,&tmp,sizeof(tmp),0)<0)
+	return 0;
+}
+
+int ftpclient_pasv(int sock_ctl,int sock_data,char *response) //处理pasv命令
+{
+
+	if (setsockopt(sock_ctl, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) 
 	{
-		perror("client:error reading message from server.");
+		perror("Error setting socket options");
 		return -1;
 	}
+	int tmp=0;
+	if(recv(sock_ctl,&tmp,sizeof(tmp),0)<0)    //等待服务器连接成功发送过来一个信号
+	{
+		perror("client: action list error reading message from server.\n");
+		return -1;
+	}
+
+	memset(response,0,sizeof(response));
+	ssize_t s=recv(sock_data,response,MAXSIZE,0);
+	printf("list s:%d\n",s);
+	printf("re:%s",response);
+
 	return 0;
 }
 
@@ -232,10 +260,10 @@ int ftpclient_send_pasv(int sock_ctl, char* response, int response_size)
 }
 
 
-int ftpclient_start_pasv_data_conn(int sock_ctl, char* response)
+int ftpclient_start_pasv_data_conn(char* response)
 {
     int h1, h2, h3, h4, p1, p2;
-	int matched = sscanf(response, "227 Entering Passive Mode (%d,%d,%d,%d,%d,%d)", &h1, &h2, &h3, &h4, &p1, &p2);
+	int matched = sscanf(response, "(%d,%d,%d,%d,%d,%d)", &h1, &h2, &h3, &h4, &p1, &p2);
 	if (matched != 6)
 	{
 		printf("parse response fail, sscanf matched %d items\n", matched);
@@ -270,6 +298,7 @@ int ftpclient_login(int sock_ctl)
 
 	strcpy(cmd.code,"USER");
 	strcpy(cmd.arg,user);
+	printf(">>cmd>>%s\n",cmd.arg);
 	ftpclient_send_cmd(sock_ctl,&cmd);     //发送用户名到服务器
 	
 	int wait=0;
@@ -280,6 +309,7 @@ int ftpclient_login(int sock_ctl)
 
 	strcpy(cmd.code,"PASS");
 	strcpy(cmd.arg,pass);
+	printf(">>cmd>>%s\n",cmd.arg);
 	ftpclient_send_cmd(sock_ctl,&cmd);   //发送密码到服务器
 
 	int retcode = read_reply(sock_ctl);   //读取服务器的回应
@@ -290,7 +320,7 @@ int ftpclient_login(int sock_ctl)
 		return -1;
 
 	case 230:
-		printf("Successful login.\n");      //登录成功，发送pasv，再读取返回信息
+		printf("Successful login.\n");      //登录成功
 		break;
 		
 	default:

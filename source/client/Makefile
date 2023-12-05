@@ -21,5 +21,5 @@ rmlogs:
 	rm -rf ../../logs/*
 
 install: $(OUTFILE)
-	mkdir -p ../../install/
-	cp $(OUTFILE) ../../install/
+	mkdir -p ../../bin/
+	cp $(OUTFILE) ../../bin/

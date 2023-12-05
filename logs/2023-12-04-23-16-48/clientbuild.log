@@ -1,0 +1,28 @@
+In file included from ftpClient.h:12,
+                 from main.c:1:
+../common/common.h:29:8: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘.’ token
+   29 | timeout.tv_sec = 5;  // 设置超时的秒数
+      |        ^
+../common/common.h:30:8: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘.’ token
+   30 | timeout.tv_usec = 10;  // 设置超时的微秒数
+      |        ^
+In file included from ftpClient.h:12,
+                 from ftpClient.c:10:
+../common/common.h:29:8: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘.’ token
+   29 | timeout.tv_sec = 5;  // 设置超时的秒数
+      |        ^
+../common/common.h:30:8: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘.’ token
+   30 | timeout.tv_usec = 10;  // 设置超时的微秒数
+      |        ^
+ftpClient.c: In function ‘ftpclient_read_cmd’:
+ftpClient.c:59:9: warning: implicit declaration of function ‘read_input’; did you mean ‘readlinkat’? [-Wimplicit-function-declaration]
+   59 |         read_input(buf,size);
+      |         ^~~~~~~~~~
+      |         readlinkat
+In file included from ../common/common.c:10:
+../common/common.h:29:8: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘.’ token
+   29 | timeout.tv_sec = 5;  // 设置超时的秒数
+      |        ^
+../common/common.h:30:8: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘.’ token
+   30 | timeout.tv_usec = 10;  // 设置超时的微秒数
+      |        ^

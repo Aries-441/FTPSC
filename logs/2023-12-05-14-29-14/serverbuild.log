@@ -1,0 +1,42 @@
+ftpServer.c: In function ‘ftpserver_start_pasv_data_conn’:
+ftpServer.c:76:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+   76 |         sendfile(session->sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+ftpServer.c: In function ‘ftpserver_check_user’:
+ftpServer.c:270:33: warning: passing argument 2 of ‘getline’ from incompatible pointer type [-Wincompatible-pointer-types]
+  270 |         while(-1!=getline(&line,&len,fd))
+      |                                 ^~~~
+      |                                 |
+      |                                 int *
+In file included from ../common/common.h:14,
+                 from ftpServer.h:4,
+                 from ftpServer.c:12:
+/usr/include/stdio.h:646:46: note: expected ‘size_t * restrict’ {aka ‘long unsigned int * restrict’} but argument is of type ‘int *’
+  646 |                           size_t *__restrict __n,
+      |                           ~~~~~~~~~~~~~~~~~~~^~~
+ftpServer.c: In function ‘ftpserver_start_pasv_data_conn’:
+ftpServer.c:61:52: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+   61 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |                                                    ^~                ~~~~~~~~
+ftpServer.c:61:9: note: ‘snprintf’ output between 19 and 1042 bytes into a destination of size 256
+   61 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_list’:
+ftpServer.c:362:51: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+  362 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |                                                   ^~
+ftpServer.c:362:9: note: ‘snprintf’ output between 18 and 1041 bytes into a destination of size 256
+  362 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_make_directory’:
+ftpServer.c:597:43: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 512 [-Wformat-truncation=]
+  597 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |                                           ^~
+ftpServer.c:597:5: note: ‘snprintf’ output 1 or more bytes (assuming 1024) into a destination of size 512
+  597 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/bin/ld: /tmp/cc5PX2r1.o: in function `ftpserver_process':
+ftpServer.c:(.text+0x3fc): undefined reference to `create_acl_file'
+/usr/bin/ld: /tmp/cc5PX2r1.o: in function `ftpserver_list':
+ftpServer.c:(.text+0xfae): undefined reference to `check_permissions'
+collect2: error: ld returned 1 exit status
