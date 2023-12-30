@@ -1,3 +1,12 @@
+/*
+ * @FileName: 
+ * @Description: 
+ * @Autor: Liujunjie/Aries-441
+ * @StudentNumber: 521021911059
+ * @Date: 2023-11-30 21:37:02
+ * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
+ * @LastEditTime: 2023-12-26 19:56:33
+ */
 #ifndef _FTP_SERVER_H__
 #define _FTP_SERVER_H__
 
@@ -11,6 +20,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <mysql.h>
+#include <limits.h>
+#include <libgen.h>
 
 typedef struct {
     int sock_ctl; // control socket
@@ -18,8 +29,6 @@ typedef struct {
     char UserName[MAXSIZE];
     char FTP_PATH[MAXSIZE];
     int pasv_flag;
-    int sock_data_pasv;
-
 } UserSession;
 
 void ftpserver_process(UserSession *session);

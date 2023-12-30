@@ -5,7 +5,7 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:10
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-05 22:35:54
+ * @LastEditTime: 2023-12-27 22:39:56
  */
 #include"ftpClient.h"
 #include <sys/stat.h>
@@ -56,6 +56,7 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 {
 	memset(cmd->code,0,sizeof(cmd->code));
 	memset(cmd->arg,0,sizeof(cmd->arg));
+	printf("\n\n");
 	printf("ftpclient> ");  //输入提示符
 	fflush(stdout);
 	read_input(buf,size);
@@ -98,9 +99,6 @@ int ftpclient_read_cmd(char* buf,size_t size,struct command *cmd) //读取客户
 		strcat(buf," ");
 		strncat(buf,cmd->arg,strlen(cmd->arg));
 	}	
-	//打印buf
-	printf("buf:%s\n",buf);
-
 	return 0;
 }
 
@@ -121,25 +119,29 @@ int ftpclient_put(int sock_data,char *filename)
 }
 
 
-int ftpclient_get(int sock_data,char *filename)
-{
-	int fd=open(filename,O_CREAT|O_WRONLY,0664);	
-	while(1)
-	{
-		ssize_t s=0;
-		char data[MAXSIZE];
-		memset(data,0,sizeof(data));
-		s=recv(sock_data,data,sizeof(data),0);
-		if(s<=0)
-		{
-			if(s<0)
-				perror("error");
-			break;
-		}
-		write(fd,data,s);
-	}
-	close(fd);
-	return 0;
+int ftpclient_get(int sock_data, char* filename) {
+    char newFilename[4096];
+    snprintf(newFilename, sizeof(newFilename), "./ftpdownloads/%s", filename);
+    int fd = open(newFilename, O_CREAT | O_WRONLY, 0664);
+    if (fd == -1) {
+        perror("open");
+        return -1;
+    }
+
+    while (1) {
+        char data[MAXSIZE];
+        memset(data, 0, sizeof(data));
+        ssize_t s = recv(sock_data, data, sizeof(data), 0);
+        if (s <= 0) {
+            if (s < 0)
+                perror("error");
+            break;
+        }
+        write(fd, data, s);
+    }
+
+    close(fd);
+    return 0;
 }
 
 int ftpclient_open_conn(int sock_ctl)   //打开数据连接
@@ -147,12 +149,15 @@ int ftpclient_open_conn(int sock_ctl)   //打开数据连接
 	int sock_listen=socket_create("0.0.0.0",CLIENT_PORT);   //创建一个数据连接
 	int ack=1;
 	//给服务器发送一个确认，告诉服务器客户端创建好了一条数据链路
+	//printf("ftpclient_open_conn:sock_ctl:");
+	//socket_Info(sock_ctl);
 	if(send(sock_ctl,(char*)&ack,sizeof(ack),0)<0) 
 	{
 		printf("client:ack write error:%d\n",errno);
 		return -1;
 	}
 	int sock_data=socket_accept(sock_listen);
+	//socket_Info(sock_data);
 	close(sock_listen);
 	return sock_data;     
 }
@@ -177,7 +182,6 @@ int ftpclient_list(int sock_ctl,int sock_data) //处理list命令
 		char buf[MAXSIZE];
 		memset(buf,0,sizeof(buf));
 		ssize_t s=recv(sock_data,buf,MAXSIZE,0);
-		printf("list s:%d\n",s);
 		if(s<=0)
 		{
 			if(s<0)
@@ -192,7 +196,6 @@ int ftpclient_list(int sock_ctl,int sock_data) //处理list命令
 
 int ftpclient_pasv(int sock_ctl,int sock_data,char *response) //处理pasv命令
 {
-
 	if (setsockopt(sock_ctl, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) 
 	{
 		perror("Error setting socket options");
@@ -204,12 +207,8 @@ int ftpclient_pasv(int sock_ctl,int sock_data,char *response) //处理pasv命令
 		perror("client: action list error reading message from server.\n");
 		return -1;
 	}
-
 	memset(response,0,sizeof(response));
 	ssize_t s=recv(sock_data,response,MAXSIZE,0);
-	printf("list s:%d\n",s);
-	printf("re:%s",response);
-
 	return 0;
 }
 
@@ -310,13 +309,11 @@ int ftpclient_login(int sock_ctl)
 	unsigned char hash[SHA256_DIGEST_LENGTH];
 	SHA256((unsigned char*)pass, strlen(pass), hash);
 	char* output = base64_encode(hash, SHA256_DIGEST_LENGTH);
-
 	strcpy(cmd.code,"PASS");
 	strcpy(cmd.arg, output);
-
 	ftpclient_send_cmd(sock_ctl,&cmd);   //发送密码到服务器
-
 	int retcode = read_reply(sock_ctl);   //读取服务器的回应
+
 	switch(retcode)
 	{
 	case 430:

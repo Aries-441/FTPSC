@@ -1,0 +1,37 @@
+ftpServer.c: In function ‘ftpserver_start_pasv_data_conn’:
+ftpServer.c:75:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+   75 |         sendfile(session->sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+ftpServer.c: In function ‘ftpserver_process’:
+ftpServer.c:94:26: error: ‘dir_path’ undeclared (first use in this function)
+   94 |                 snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, session->UserName);
+      |                          ^~~~~~~~
+ftpServer.c:94:26: note: each undeclared identifier is reported only once for each function it appears in
+ftpServer.c: In function ‘ftpserver_retr’:
+ftpServer.c:420:24: warning: ‘return’ with a value, in function returning void
+  420 |                 return -1;
+      |                        ^
+ftpServer.c:408:6: note: declared here
+  408 | void ftpserver_retr(UserSession *session,char *filename)
+      |      ^~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_push’:
+ftpServer.c:456:24: warning: ‘return’ with a value, in function returning void
+  456 |                 return -1;
+      |                        ^
+ftpServer.c:440:6: note: declared here
+  440 | void ftpserver_push(UserSession *session,char* filename)
+      |      ^~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_delet’:
+ftpServer.c:508:24: warning: ‘return’ with a value, in function returning void
+  508 |                 return -1;
+      |                        ^
+ftpServer.c:496:6: note: declared here
+  496 | void ftpserver_delet(UserSession *session, char *filename)
+      |      ^~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_rename_directory’:
+ftpServer.c:647:24: warning: ‘return’ with a value, in function returning void
+  647 |                 return -1;
+      |                        ^
+ftpServer.c:620:6: note: declared here
+  620 | void ftpserver_rename_directory(UserSession *session, char *arg)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~

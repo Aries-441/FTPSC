@@ -1,0 +1,65 @@
+ftpServer.c: In function ‘ftpserver_start_pasv_data_conn’:
+ftpServer.c:75:9: warning: implicit declaration of function ‘sendfile’ [-Wimplicit-function-declaration]
+   75 |         sendfile(session->sock_data,fd,NULL,size);
+      |         ^~~~~~~~
+ftpServer.c: In function ‘ftpserver_process’:
+ftpServer.c:94:26: error: ‘dir_path’ undeclared (first use in this function)
+   94 |                 snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, session->UserName);
+      |                          ^~~~~~~~
+ftpServer.c:94:26: note: each undeclared identifier is reported only once for each function it appears in
+ftpServer.c: In function ‘ftpserver_retr’:
+ftpServer.c:419:24: warning: ‘return’ with a value, in function returning void
+  419 |                 return -1;
+      |                        ^
+ftpServer.c:407:6: note: declared here
+  407 | void ftpserver_retr(UserSession *session,char *filename)
+      |      ^~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_push’:
+ftpServer.c:455:24: warning: ‘return’ with a value, in function returning void
+  455 |                 return -1;
+      |                        ^
+ftpServer.c:439:6: note: declared here
+  439 | void ftpserver_push(UserSession *session,char* filename)
+      |      ^~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_delet’:
+ftpServer.c:507:24: warning: ‘return’ with a value, in function returning void
+  507 |                 return -1;
+      |                        ^
+ftpServer.c:495:6: note: declared here
+  495 | void ftpserver_delet(UserSession *session, char *filename)
+      |      ^~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_rename_directory’:
+ftpServer.c:646:24: warning: ‘return’ with a value, in function returning void
+  646 |                 return -1;
+      |                        ^
+ftpServer.c:619:6: note: declared here
+  619 | void ftpserver_rename_directory(UserSession *session, char *arg)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_make_directory’:
+ftpServer.c:670:24: warning: ‘return’ with a value, in function returning void
+  670 |                 return -1;
+      |                        ^
+ftpServer.c:660:6: note: declared here
+  660 | void ftpserver_make_directory(UserSession *session,char *path)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_start_pasv_data_conn’:
+ftpServer.c:60:52: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+   60 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |                                                    ^~                ~~~~~~~~
+ftpServer.c:60:9: note: ‘snprintf’ output between 19 and 1042 bytes into a destination of size 256
+   60 |         snprintf(command, sizeof(command), "echo \"%s\" > temp.txt", response);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_list’:
+ftpServer.c:385:51: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 250 [-Wformat-truncation=]
+  385 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |                                                   ^~
+ftpServer.c:385:9: note: ‘snprintf’ output between 18 and 1041 bytes into a destination of size 256
+  385 |         snprintf(command, sizeof(command), "ls -l %s > temp.txt", session->FTP_PATH);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ftpServer.c: In function ‘ftpserver_make_directory’:
+ftpServer.c:663:43: warning: ‘%s’ directive output may be truncated writing up to 1023 bytes into a region of size 512 [-Wformat-truncation=]
+  663 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |                                           ^~
+ftpServer.c:663:5: note: ‘snprintf’ output 1 or more bytes (assuming 1024) into a destination of size 512
+  663 |     snprintf(dir_path, sizeof(dir_path), "%s%s", session->FTP_PATH, path);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

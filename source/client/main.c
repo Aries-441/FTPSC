@@ -67,23 +67,13 @@ int main(int argc,char* argv[])
 		else        //status is 200
 		{
 			printf("status 200\n");
-
-
 			sock_data = ftpclient_open_conn(sock_ctl);  // 创建一个数据连接
-
 			if ((strcmp(cmd.code,"PASV")==0 && (pasv_flag == 0)) || (pasv_flag == 1))
-			{
-							
-				printf("\n");
+			{			
 				char response[MAXSIZE];
 				memset(response,0,1024);
-
 				ftpclient_pasv(sock_ctl,sock_data,response);
 				sock_data = ftpclient_start_pasv_data_conn(response);
-
-				printf("sock_data_pasv:%d\n",sock_data);
-				socket_Info(sock_data);
-
 				if(pasv_flag == 0){
 					printf("第一次pasv\n");
 					pasv_flag = 1;
@@ -92,15 +82,9 @@ int main(int argc,char* argv[])
 						close(sock_data);
 					}
 					continue;
-				}
+				}	
+			}
 
-					
-			}
-			else
-			{
-				printf("strcmp:%d\n",strcmp(cmd.code,"PASV"));
-				printf("pasv_flag:%d\n",pasv_flag);
-			}
 
 			if(sock_data<0)
 			{
@@ -110,10 +94,7 @@ int main(int argc,char* argv[])
 			
 			if(strcmp(cmd.code,"LIST")==0)      //list命令
 			{
-				printf("sock_data:%d\n",sock_data);
-				socket_Info(sock_data);
 				ftpclient_list(sock_ctl,sock_data);
-
 				int reply = read_reply(sock_ctl);
 
 				if(reply == 200)  // Command is valid
@@ -168,8 +149,8 @@ int main(int argc,char* argv[])
 				ftpclient_pasv(sock_ctl,sock_data,response);
 				sock_data = ftpclient_start_pasv_data_conn(response);
 
-				printf("sock_data:%d\n",sock_data);
-				socket_Info(sock_data);
+				//printf("sock_data:%d\n",sock_data);
+				//socket_Info(sock_data);
 
 				if(sock_data > 0){
 					//sock_data_pasv = dup(data_sock);

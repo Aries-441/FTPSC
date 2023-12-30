@@ -1,0 +1,11 @@
+ftpClient.c: In function ‘ftpclient_read_cmd’:
+ftpClient.c:59:23: error: expected ‘;’ before ‘printf’
+   59 |         printf("\n\n")
+      |                       ^
+      |                       ;
+   60 |         printf("ftpclient> ");  //输入提示符
+      |         ~~~~~~         
+ftpClient.c:62:9: warning: implicit declaration of function ‘read_input’; did you mean ‘readlinkat’? [-Wimplicit-function-declaration]
+   62 |         read_input(buf,size);
+      |         ^~~~~~~~~~
+      |         readlinkat

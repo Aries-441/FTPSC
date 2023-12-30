@@ -5,7 +5,7 @@
  * @StudentNumber: 521021911059
  * @Date: 2023-11-30 21:37:02
  * @E-mail: sjtu.liu.jj@gmail.com/sjtu.1518228705@sjtu.edu.cn
- * @LastEditTime: 2023-12-05 20:34:57
+ * @LastEditTime: 2023-12-18 16:47:22
  */
 #include "ftpServer.h"
 #include <sha.h>
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
         char* output = base64_encode(hash, SHA256_DIGEST_LENGTH);
         // 将用户名和密码哈希值写入到 MySQL 数据库中
         MYSQL* mysql_conn = mysql_init(NULL);
-        if (!mysql_real_connect(mysql_conn, "localhost", "root", "ljj0403!", "ftpusers", 0, NULL, 0)) {
+        if (!mysql_real_connect(mysql_conn, "localhost", "root", "******", "ftpusers", 0, NULL, 0)) {
             fprintf(stderr, "Failed to connect to MySQL database: %s\n", mysql_error(mysql_conn));
             return 1;
         }
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    int sock = socket_create("127.0.0.1", 21);
+    int sock = socket_create("0.0.0.0", 21);
 
     while (1) {
         int connf = socket_accept(sock);
